@@ -1,0 +1,120 @@
+version: "3.9"
+
+networks:
+  ThinkAndSpeakNet:
+    name: ThinkAndSpeakNet
+
+volumes:
+  mysql-data:
+  redis-data:
+  rocketmq-data:
+  rocketmq-logs:
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: ts-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: think_and_speak
+      TZ: Asia/Shanghai
+    command:
+      [
+        "mysqld",
+        "--character-set-server=utf8mb4",
+        "--collation-server=utf8mb4_unicode_ci",
+      ]
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-ppassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - ThinkAndSpeakNet
+
+  redis:
+    image: redis:7-alpine
+    container_name: ts-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - ThinkAndSpeakNet
+
+  rocketmq-namesrv:
+    image: apache/rocketmq:5.3.1
+    container_name: ts-rocketmq-namesrv
+    restart: unless-stopped
+    command: ["sh", "-c", "bin/mqnamesrv"]
+    ports:
+      - "9876:9876"
+    volumes:
+      - rocketmq-data:/home/rocketmq/store
+      - rocketmq-logs:/home/rocketmq/logs
+    healthcheck:
+      test: ["CMD", "bash", "-c", "nc -z 127.0.0.1 9876"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - ThinkAndSpeakNet
+
+  rocketmq-broker:
+    image: apache/rocketmq:5.3.1
+    container_name: ts-rocketmq-broker
+    restart: unless-stopped
+    depends_on:
+      rocketmq-namesrv:
+        condition: service_healthy
+    environment:
+      NAMESRV_ADDR: rocketmq-namesrv:9876
+    command: ["sh", "-c", "bin/mqbroker -n rocketmq-namesrv:9876"]
+    ports:
+      - "10911:10911"
+      - "10909:10909"
+    volumes:
+      - rocketmq-data:/home/rocketmq/store
+      - rocketmq-logs:/home/rocketmq/logs
+    healthcheck:
+      test: ["CMD", "bash", "-c", "nc -z 127.0.0.1 10911"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - ThinkAndSpeakNet
+
+  rocketmq-dashboard:
+    image: apacherocketmq/rocketmq-dashboard:latest
+    container_name: ts-rocketmq-dashboard
+    restart: unless-stopped
+    depends_on:
+      rocketmq-namesrv:
+        condition: service_healthy
+    environment:
+      JAVA_OPTS: -Drocketmq.namesrv.addr=rocketmq-namesrv:9876
+    ports:
+      - "8081:8080"
+    networks:
+      - ThinkAndSpeakNet
+
+  ollama:
+    image: "ollama/ollama:latest"
+    container_name: ts-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    networks:
+      - ThinkAndSpeakNet

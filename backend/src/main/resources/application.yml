@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: think-and-speak-backend
+  ai:
+    chat:
+      client:
+        enabled: false
+  datasource:
+    url: jdbc:mysql://localhost:3306/think_and_speak?useSSL=false&serverTimezone=UTC&characterEncoding=utf8
+    username: root
+    password: password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  cache:
+    type: redis
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+security:
+  token:
+    value: e609e503-4786-4363-a349-35f51b6e2f8a
+
+rocketmq:
+  name-server: localhost:9876
+  producer:
+    group: think_and_speak_producer
+
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  group-configs:
+    - group: 'demo'
+      paths-to-match: '/api/**'
+      packages-to-scan: xyz.mushan.backend.controller
+  default-flat-param-object: false
+
+server:
+  port: 8080
