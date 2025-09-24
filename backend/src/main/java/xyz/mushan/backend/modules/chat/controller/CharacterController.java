@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import xyz.mushan.backend.common.base.ApiResponse;
 import xyz.mushan.backend.modules.chat.dto.CharacterDto;
 import xyz.mushan.backend.modules.chat.service.CharacterService;
 
@@ -22,25 +23,25 @@ public class CharacterController {
 
     /**
      * 获取角色列表
-     * 
+     *
      * @param q 搜索关键字，可选参数
      * @return 角色传输对象列表
      */
     @GetMapping
     @Operation(summary = "获取角色列表", description = "根据搜索关键字获取角色列表，如果不提供关键字则返回所有角色")
-    public List<CharacterDto> list(@RequestParam(required = false) String q) {
-        return characterService.searchCharacters(q);
+    public ApiResponse<List<CharacterDto>> list(@RequestParam(required = false) String q) {
+        return ApiResponse.success(characterService.searchCharacters(q));
     }
 
     /**
      * 根据ID获取角色详情
-     * 
+     *
      * @param id 角色ID
      * @return 角色传输对象
      */
     @GetMapping("/{id}")
     @Operation(summary = "根据ID获取角色详情", description = "根据角色ID获取角色详细信息")
-    public CharacterDto get(@PathVariable String id) {
-        return characterService.getCharacterById(Long.valueOf(id));
+    public ApiResponse<CharacterDto> get(@PathVariable Long id) {
+        return ApiResponse.success(characterService.getCharacterById(id));
     }
 }

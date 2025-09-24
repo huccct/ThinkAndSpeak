@@ -42,12 +42,9 @@ springdoc:
     enabled: true
   group-configs:
     - group: 'demo'
-      paths-to-match: '/api/demo/**'
-      packages-to-scan: xyz.mushan.backend.modules.demo.controller
+      packages-to-scan: xyz.mushan.backend.modules.demo
     - group: 'chat'
-      paths-to-match: '/api/chat/**'
-      packages-to-scan: xyz.mushan.backend.modules.chat.controller
-  default-flat-param-object: false
+      packages-to-scan: xyz.mushan.backend.modules.chat
 
 server:
   port: 8080
