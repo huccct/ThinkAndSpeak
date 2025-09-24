@@ -1,4 +1,4 @@
-package xyz.mushan.backend.exception;
+package xyz.mushan.backend.common.exception;
 
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
@@ -7,8 +7,8 @@ import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import xyz.mushan.backend.common.ApiResponse;
-import xyz.mushan.backend.common.ErrorCode;
+import xyz.mushan.backend.common.base.ApiResponse;
+import xyz.mushan.backend.common.base.ErrorCode;
 
 /**
  * @author mushan

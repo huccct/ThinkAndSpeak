@@ -42,9 +42,17 @@ springdoc:
     enabled: true
   group-configs:
     - group: 'demo'
-      paths-to-match: '/api/**'
-      packages-to-scan: xyz.mushan.backend.controller
+      paths-to-match: '/api/demo/**'
+      packages-to-scan: xyz.mushan.backend.modules.demo.controller
+    - group: 'chat'
+      paths-to-match: '/api/chat/**'
+      packages-to-scan: xyz.mushan.backend.modules.chat.controller
   default-flat-param-object: false
 
 server:
   port: 8080
+
+id:
+  snowflake:
+    worker-id: 1
+    datacenter-id: 1
