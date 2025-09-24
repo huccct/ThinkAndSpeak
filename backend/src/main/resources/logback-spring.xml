@@ -2,7 +2,7 @@
 <configuration scan="true" scanPeriod="60 seconds">
 
     <property name="APP_NAME" value="think-and-speak-backend"/>
-    <property name="LOG_DIR" value="logs"/>
+    <property name="LOG_DIR" value="./logs"/>
     <property name="MAX_FILE_SIZE" value="50MB"/>
     <property name="TOTAL_SIZE_CAP" value="2GB"/>
     <property name="MAX_HISTORY" value="14"/>

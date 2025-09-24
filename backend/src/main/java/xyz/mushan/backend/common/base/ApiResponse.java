@@ -1,4 +1,4 @@
-package xyz.mushan.backend.common;
+package xyz.mushan.backend.common.base;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;

@@ -1,4 +1,4 @@
-package xyz.mushan.backend.config;
+package xyz.mushan.backend.common.config;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.ExternalDocumentation;

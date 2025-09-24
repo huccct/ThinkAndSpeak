@@ -1,4 +1,4 @@
-package xyz.mushan.backend.config;
+package xyz.mushan.backend.common.config;
 
 import io.micrometer.common.lang.NonNull;
 import org.springframework.beans.factory.annotation.Value;
