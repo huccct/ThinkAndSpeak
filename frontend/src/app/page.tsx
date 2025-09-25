@@ -38,7 +38,10 @@ export default function Home() {
       <div className="mx-auto w-full max-w-5xl px-6 py-10 font-mono">
         <header className="flex items-center justify-between">
           <div className="text-lg font-semibold tracking-tight uppercase">Think·Speak</div>
-          <nav className="flex items-center gap-2">
+          <nav className="flex items-center gap-4">
+            <Link href="/characters" className="text-sm text-white/70 hover:text-white">
+              角色库
+            </Link>
             <Link href="/settings" className="text-sm text-white/70 hover:text-white">
               Settings
             </Link>

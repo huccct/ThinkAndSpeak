@@ -94,7 +94,9 @@ export default function ChatPage({ params }: { params: { id: string } }) {
               <p className="text-sm text-white/60">{ch.sampleTopics.slice(0, 2).join(" · ")}</p>
             </div>
           </div>
-         
+          <Link href="/settings" className="text-sm text-white/70 hover:text-white transition-colors">
+            Settings
+          </Link>
         </header>
 
         <div className="mb-6 p-4 border-2 border-white/20 rounded-none bg-transparent">
