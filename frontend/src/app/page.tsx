@@ -42,6 +42,9 @@ export default function Home() {
             <Link href="/characters" className="text-sm text-white/70 hover:text-white">
               角色库
             </Link>
+            <Link href="/sessions" className="text-sm text-white/70 hover:text-white">
+              会话历史
+            </Link>
             <Link href="/settings" className="text-sm text-white/70 hover:text-white">
               Settings
             </Link>
