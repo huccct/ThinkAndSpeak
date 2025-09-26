@@ -1,5 +1,6 @@
 package xyz.mushan.backend.modules.chat.dto;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 public record MessageDto(
@@ -7,5 +8,5 @@ public record MessageDto(
         String sender,
         String content,
         String metadata,
-        LocalDateTime createdAt) {
+        LocalDateTime createdAt) implements Serializable {
 }

@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -17,7 +19,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CharacterEntity {
+public class CharacterEntity implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
     /**
      * 角色唯一标识符(Long 雪花ID)
      */
