@@ -53,3 +53,14 @@ id:
   snowflake:
     worker-id: 1
     datacenter-id: 1
+
+llm:
+  openai:
+    api-key: sk-xxxx
+    model: gpt-4o-mini
+  deepseek:
+    api-key: sk-xxxx
+    model: deepseek-chat
+  ollama:
+    base-url: http://localhost:11434
+    model: llama3

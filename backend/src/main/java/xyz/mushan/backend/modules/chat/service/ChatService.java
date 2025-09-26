@@ -5,8 +5,9 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import xyz.mushan.backend.modules.llm.adapter.LLMAdapter;
+import xyz.mushan.backend.modules.llm.adapter.enums.LLMProvider;
 
-import java.util.Optional;
+import java.util.Map;
 
 /**
  * 聊天服务类
@@ -22,7 +23,7 @@ public class ChatService {
      * LLM适配器，用于调用大语言模型生成回复
      * 使用Optional包装以支持不存在适配器时的本地模拟模式
      */
-    private final Optional<LLMAdapter> llmAdapter;
+    private final Map<String, LLMAdapter> adapters;
 
     /**
      * 生成回复内容
@@ -38,7 +39,11 @@ public class ChatService {
             maxAttempts = 3,
             backoff = @Backoff(delay = 1000)
     )
-    public String generateReply(String persona, String history, String userMessage) {
+    public String generateReply(String persona, String history, String userMessage, LLMProvider provider) {
+        LLMAdapter adapter = adapters.get(provider.getBeanName());
+        if (adapter == null) {
+            throw new IllegalArgumentException("未知的 LLM provider: " + provider);
+        }
         // 构建提示词
         String prompt = String.format("""
                         %s
@@ -53,12 +58,10 @@ public class ChatService {
         );
 
         // 尝试使用LLM适配器生成回复
-        if (llmAdapter.isPresent()) {
-            try {
-                return llmAdapter.get().generate(prompt);
-            } catch (Exception e) {
-                // 当LLM调用失败时，降级到本地模拟模式
-            }
+        try {
+            return adapter.generate(prompt);
+        } catch (Exception e) {
+            // 当LLM调用失败时，降级到本地模拟模式
         }
 
         // 本地模拟回复
