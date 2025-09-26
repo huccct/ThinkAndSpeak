@@ -1,30 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { CHARACTERS } from "@/lib/characters";
+import { useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  useCharacters,
+  useCharactersLoading,
+  useCharactersError,
+  useCharactersQuery,
+  useCharactersLoad,
+  useCharactersSetQuery,
+} from "@/modules/characters/characters.store";
 
 export default function Home() {
-  const [q, setQ] = useState("");
-  const [loading, setLoading] = useState(true);
+  const list = useCharacters();
+  const loading = useCharactersLoading();
+  const error = useCharactersError();
+  const q = useCharactersQuery();
+  const load = useCharactersLoad();
+  const setQuery = useCharactersSetQuery();
 
-  const list = useMemo(() => {
-    const s = q.trim().toLowerCase();
-    if (!s) return CHARACTERS;
-    return CHARACTERS.filter(
-      (c) => c.name.toLowerCase().includes(s) || c.id.includes(s)
-    );
-  }, [q]);
-
-  // 初次加载短骨架
-  useState(() => {
-    const t = setTimeout(() => setLoading(false), 300);
-    return () => clearTimeout(t);
-  });
+  useEffect(() => {
+    load();
+  }, [load]);
 
   return (
     <div
@@ -57,14 +58,20 @@ export default function Home() {
           <div className="mt-5">
             <div className="relative">
               <Input
-                placeholder="搜索：哈利、苏格拉底、福尔摩斯…"
+                placeholder="搜索角色关键字…"
                 value={q}
-                onChange={(e) => setQ(e.target.value)}
+                onChange={(e) => setQuery(e.target.value)}
                 className="h-11 border-2 rounded-none border-white/40 text-white placeholder:text-white/40 focus-visible:border-white focus-visible:ring-0 shadow-[4px_4px_0_0_#ffffff20]"
               />
               <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-white/40 text-sm">
                 ⌘K
               </div>
+            </div>
+            <div className="mt-3">
+              <button
+                onClick={() => load()}
+                className="px-3 py-2 border-2 border-white/40 rounded-none bg-transparent text-white hover:border-white/60 hover:bg-white/10 transition-colors shadow-[4px_4px_0_0_#ffffff20]"
+              >搜索</button>
             </div>
           </div>
 
@@ -85,7 +92,9 @@ export default function Home() {
                     </CardContent>
                   </Card>
                 ))
-                : list.length > 0
+                : error ? (
+                  <div className="col-span-full text-center text-sm text-red-400">{error}</div>
+                ) : list.length > 0
               ? list.map((c) => (
                   <Card
                     key={c.id}
@@ -94,12 +103,12 @@ export default function Home() {
                     <CardHeader className="px-5 pb-0">
                       <CardTitle className="text-white uppercase tracking-wide">{c.name}</CardTitle>
                       <CardDescription className="text-white/60">
-                        {c.sampleTopics.slice(0, 2).join(" · ")}
+                        {c.topics.slice(0, 2).join(" · ")}
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="px-5 pb-5">
                       <div className="flex flex-wrap gap-2">
-                        {c.sampleTopics.map((t, i) => (
+                        {c.topics.map((t, i) => (
                           <Badge
                             key={i}
                             variant="outline"
@@ -122,32 +131,12 @@ export default function Home() {
                 ))
               : (
                   <div className="col-span-full text-center text-sm text-white/60">
-                    未找到匹配角色，试试：
-                    <span className="mx-2 rounded bg-white/5 px-2 py-1">哈利</span>
-                    <span className="mx-2 rounded bg-white/5 px-2 py-1">苏格拉底</span>
-                    <span className="mx-2 rounded bg-white/5 px-2 py-1">福尔摩斯</span>
+                    未找到匹配角色
                   </div>
                 )}
           </div>
         </section>
 
-        {!q && !loading && (
-          <section className="mt-10">
-            <h2 className="text-sm font-medium text-white/80 uppercase tracking-wider">快速开始</h2>
-            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
-              {CHARACTERS.slice(0, 3).map((c) => (
-                <Link key={c.id} href={`/chat/${c.id}`}>
-                  <div className="group rounded-none border-2 border-white/30 p-4 hover:border-white/60 shadow-[4px_4px_0_0_#ffffff20]">
-                    <div className="text-sm font-medium">{c.name}</div>
-                    <div className="mt-1 text-xs text-white/60">
-                      {c.sampleTopics[0]}
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
       </div>
     </div>
   );
