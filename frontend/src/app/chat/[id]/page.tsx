@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getCharacter } from "@/lib/characters";
@@ -10,11 +10,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 type Msg = { role: "user" | "assistant"; content: string; timestamp?: number };
 
-export default function ChatPage({ params }: { params: { id: string } }) {
+export default function ChatPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
-  const ch = useMemo(() => getCharacter(params.id), [params.id]);
+  const resolvedParams = use(params);
+  const ch = useMemo(() => getCharacter(resolvedParams.id), [resolvedParams.id]);
   const [skills, setSkills] = useState<SkillToggle>({
-    socratic: params.id === "socrates",
+    socratic: resolvedParams.id === "socrates",
     quotes: true,
     flashcards: true,
     memory: true,
