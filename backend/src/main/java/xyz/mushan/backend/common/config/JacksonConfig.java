@@ -3,6 +3,7 @@ package xyz.mushan.backend.common.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -18,6 +19,10 @@ public class JacksonConfig {
         module.addSerializer(Long.class, ToStringSerializer.instance);
         module.addSerializer(Long.TYPE, ToStringSerializer.instance);
         mapper.registerModule(module);
+        
+        // 注册 JavaTimeModule 以支持时间类型的序列化
+        mapper.registerModule(new JavaTimeModule());
+        
         return mapper;
     }
 }
