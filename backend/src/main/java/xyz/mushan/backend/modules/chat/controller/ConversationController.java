@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.ProviderNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import xyz.mushan.backend.common.util.IdConverter;
@@ -19,6 +20,7 @@ import xyz.mushan.backend.modules.chat.dto.request.SendMessageRequest;
 
 import xyz.mushan.backend.modules.chat.dto.response.CreateConversationResponse;
 import xyz.mushan.backend.modules.chat.dto.response.SendMessageResponse;
+import xyz.mushan.backend.modules.llm.adapter.enums.LLMProvider;
 
 /**
  * @author mushan
@@ -83,7 +85,7 @@ public class ConversationController {
                 .forEach(m -> historySb.append(m.sender()).append(": ").append(m.content()).append("\n"));
         String history = historySb.toString();
         // 获取回复
-        String reply = chatService.generateReply(persona, history, text);
+        String reply = chatService.generateReply(persona, history, text, LLMProvider.OLLAMA);
         MessageDto assistantMsg = conversationService.appendMessage(Long.valueOf(id), "CHARACTER", reply, null);
         return ApiResponse.success(new SendMessageResponse(reply, assistantMsg.id()));
     }

@@ -3,6 +3,8 @@ package xyz.mushan.backend.modules.chat.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -16,7 +18,9 @@ import java.time.LocalDateTime;
 @Setter
 @Entity
 @Table(name = "messages")
-public class MessageEntity {
+public class MessageEntity implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
     /**
      * 消息唯一标识符(Long 雪花ID)
      */
