@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import xyz.mushan.backend.common.base.ApiResponse;
 import xyz.mushan.backend.modules.chat.dto.CharacterDto;
+import xyz.mushan.backend.modules.chat.dto.vo.CharacterCreateVo;
+import xyz.mushan.backend.modules.chat.entity.CharacterEntity;
 import xyz.mushan.backend.modules.chat.service.CharacterService;
 
 import java.util.List;
@@ -43,5 +45,16 @@ public class CharacterController {
     @Operation(summary = "根据ID获取角色详情", description = "根据角色ID获取角色详细信息")
     public ApiResponse<CharacterDto> get(@PathVariable Long id) {
         return ApiResponse.success(characterService.getCharacterById(id));
+    }
+
+    /**
+     * 创建角色
+     * @param characterCreateVo 角色创建对象
+     * @return 角色实体
+     */
+    @PostMapping
+    @Operation(summary = "创建角色", description = "创建一个新的角色")
+    public ApiResponse<CharacterEntity> create(@RequestBody CharacterCreateVo characterCreateVo) {
+        return ApiResponse.success(characterService.createCharacter(characterCreateVo));
     }
 }
