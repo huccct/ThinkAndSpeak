@@ -87,7 +87,7 @@ public class ConversationController {
                 .forEach(m -> historySb.append(m.sender()).append(": ").append(m.content()).append("\n"));
         String history = historySb.toString();
         // 获取回复
-        String reply = chatService.generateReply(persona, history, text, LLMProvider.OLLAMA);
+        String reply = chatService.generateReply(persona, history, text, LLMProvider.GEMINI);
         MessageDto assistantMsg = conversationService.appendMessage(Long.valueOf(id), "CHARACTER", reply, null);
         return ApiResponse.success(new SendMessageResponse(reply, assistantMsg.id()));
     }

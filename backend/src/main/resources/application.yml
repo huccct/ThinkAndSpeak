@@ -64,3 +64,5 @@ llm:
   ollama:
     base-url: http://localhost:11434
     model: llama3:8b
+  gemini:
+    api-key: xxx
