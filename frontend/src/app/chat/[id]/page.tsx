@@ -10,7 +10,9 @@ import {
   useCharacters,
   useCharactersLoad,
 } from "@/modules/characters/characters.store";
-import { sendChatMessage, getConversation } from "@/modules/chat/chat.service";
+import { useChatSendMessage, useChatGetConversation } from "@/modules/chat/chat.store";
+import { useAuthToken, useAuthUser, useAuthInitializeAuth } from "@/modules/auth/auth.store";
+import { UserAvatar } from "@/components/UserAvatar";
 
 type Msg = { role: "user" | "assistant"; content: string; timestamp?: number };
 
@@ -19,6 +21,12 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const list = useCharacters();
   const load = useCharactersLoad();
   const ch = useMemo(() => list.find((c) => c.id === resolvedParams.id), [list, resolvedParams.id]);
+  
+  const sendMessage = useChatSendMessage();
+  const getConversation = useChatGetConversation();
+  const token = useAuthToken();
+  const user = useAuthUser();
+  const initializeAuth = useAuthInitializeAuth();
 
   const [skills, setSkills] = useState<SkillToggle>({
     socratic: resolvedParams.id === "socrates",
@@ -34,10 +42,15 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (list.length === 0) {
+    // 初始化认证状态
+    initializeAuth();
+  }, [initializeAuth]);
+
+  useEffect(() => {
+    if (list.length === 0 && token) {
       load();
     }
-  }, [list.length, load]);
+  }, [list.length, load, token]);
 
   // 初始化会话ID并加载历史消息
   useEffect(() => {
@@ -56,19 +69,19 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
 
   // 加载会话历史消息
   const loadConversationHistory = async (conversationId: string) => {
-    try {
-      const historyMessages = await getConversation(conversationId);
-      if (historyMessages.length > 0) {
-        const convertedMessages: Msg[] = historyMessages.map(msg => ({
-          role: msg.sender === 'USER' ? 'user' : 'assistant',
-          content: msg.content,
-          timestamp: convertCreatedAtToTimestamp(msg.createdAt),
-        }));
-        setMessages(convertedMessages);
-      }
-    } catch (error) {
-      console.error('加载会话历史失败:', error);
-    }
+        try {
+          const historyMessages = await getConversation(conversationId);
+          if (historyMessages.length > 0) {
+            const convertedMessages: Msg[] = historyMessages.map(msg => ({
+              role: msg.sender === 'USER' ? 'user' : 'assistant',
+              content: msg.content,
+              timestamp: convertCreatedAtToTimestamp(msg.createdAt),
+            }));
+            setMessages(convertedMessages);
+          }
+        } catch (error) {
+          console.error('加载会话历史失败:', error);
+        }
   };
 
   // 转换后端时间格式为时间戳
@@ -137,7 +150,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       if (!currentConversationId) {
         throw new Error('会话ID不可用');
       }
-      const reply = await sendChatMessage(currentConversationId, messageText, ch.name);
+      const reply = await sendMessage(currentConversationId, messageText, ch.name);
       const assistantMsg: Msg = {
         role: "assistant",
         content: reply,
@@ -187,6 +200,16 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
               <ArrowLeft className="h-4 w-4" />
               返回
             </Link>
+            {ch?.avatar && (
+              <img
+                src={ch.avatar}
+                alt={ch.name}
+                className="w-12 h-12 rounded-none border-2 border-white/40 object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            )}
             <div>
               <h1 className="text-xl font-semibold uppercase tracking-wider">{ch?.name ?? "加载中"}</h1>
               <p className="text-sm text-white/60">
@@ -248,8 +271,20 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
             {messages.map((msg, i) => (
               <div
                 key={i}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} gap-3`}
               >
+                {msg.role === "assistant" && ch?.avatar && (
+                  <div className="flex-shrink-0 mt-1">
+                    <img
+                      src={ch.avatar}
+                      alt={ch.name}
+                      className="w-8 h-8 rounded-none border-2 border-white/40 object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
                 <div
                   className={`max-w-[80%] p-3 border-2 rounded-none shadow-[4px_4px_0_0_#ffffff20] ${
                     msg.role === "user"
@@ -264,6 +299,11 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                     </div>
                   )}
                 </div>
+                {msg.role === "user" && user && (
+                  <div className="flex-shrink-0 mt-1">
+                    <UserAvatar username={user.username} size="sm" />
+                  </div>
+                )}
               </div>
             ))}
             {sending && (
@@ -293,7 +333,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                 }
               }}
               placeholder="输入消息... (Shift+Enter 换行)"
-              className="flex-1 border-2 border-white/40 rounded-none focus-visible:border-white focus-visible:ring-0 shadow-[4px_4px_0_0_#ffffff20]"
+              className="flex-1 border-2 border-white/40 rounded-none focus-visible:border-white focus-visible:ring-0 shadow-[4px_4px_0_0_#ffffff20] bg-black text-white placeholder:text-white/40"
               disabled={sending}
             />
             <button
