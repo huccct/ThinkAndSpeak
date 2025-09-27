@@ -2,6 +2,10 @@ import { create } from 'zustand';
 import { authApi } from './auth.api';
 import type { RegisterRequest, LoginRequest } from './auth.types';
 
+// localStorage keys
+const TOKEN_KEY = 'think-speak-token';
+const USER_KEY = 'think-speak-user';
+
 type User = {
   id: string;
   username: string;
@@ -20,6 +24,8 @@ type AuthActions = {
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
   clearError: () => void;
+  getUserAvatar: (username: string) => string;
+  initializeAuth: () => void;
 };
 
 export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
@@ -57,8 +63,16 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
         throw new Error('登录响应数据缺失');
       }
       
+      const user = { id: '', username, email: '' };
+      
+      // 保存到localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(TOKEN_KEY, res.data.token);
+        localStorage.setItem(USER_KEY, JSON.stringify(user));
+      }
+      
       set({ 
-        user: { id: '', username, email: '' }, // 简化用户信息，因为后端只返回token
+        user,
         token: res.data.token,
         error: undefined 
       });
@@ -71,11 +85,39 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
   },
 
   logout: () => {
+    // 清除localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+    }
     set({ user: null, token: null, error: undefined });
+  },
+
+  getUserAvatar: (username: string) => {
+    return username.charAt(0).toUpperCase();
   },
 
   clearError: () => {
     set({ error: undefined });
+  },
+
+  initializeAuth: () => {
+    if (typeof window === 'undefined') return;
+    
+    try {
+      const token = localStorage.getItem(TOKEN_KEY);
+      const userStr = localStorage.getItem(USER_KEY);
+      
+      if (token && userStr) {
+        const user = JSON.parse(userStr);
+        set({ user, token });
+      }
+    } catch (error) {
+      console.error('Failed to initialize auth:', error);
+      // 清除损坏的数据
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+    }
   },
 }));
 
@@ -90,3 +132,5 @@ export const useAuthRegister = () => useAuthStore(s => s.register);
 export const useAuthLogin = () => useAuthStore(s => s.login);
 export const useAuthLogout = () => useAuthStore(s => s.logout);
 export const useAuthClearError = () => useAuthStore(s => s.clearError);
+export const useAuthGetUserAvatar = () => useAuthStore(s => s.getUserAvatar);
+export const useAuthInitializeAuth = () => useAuthStore(s => s.initializeAuth);

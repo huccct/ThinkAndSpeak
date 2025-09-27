@@ -1,4 +1,6 @@
 
+import { getStoredToken } from './token';
+
 export type ParseMode = 'json' | 'text' | 'blob' | 'arrayBuffer';
 
 export class HttpError extends Error {
@@ -54,13 +56,17 @@ export function createHttpClient(opts: HttpClientOptions = {}) {
   const baseURL = opts.baseURL ?? '';
   const defaultTimeout = opts.timeoutMs ?? 30000;
 
+  // 默认的token获取函数
+  const defaultGetToken = () => getStoredToken();
+
   async function request<T = unknown>(path: string, options: RequestOptions = {}): Promise<T> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? defaultTimeout);
 
     try {
-      // 动态获取token
-      const token = opts.getToken?.();
+      // 动态获取token - 优先使用传入的getToken，否则使用默认的
+      const getToken = opts.getToken || defaultGetToken;
+      const token = getToken();
       
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',

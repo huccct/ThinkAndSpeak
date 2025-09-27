@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { createChatApi } from './chat.api';
+import { chatApi } from './chat.api';
 import type { SendMessageRequest, ConversationMessage } from './chat.types';
 
 const FIXED_USER_ID = 'demo-user-0001';
@@ -11,9 +11,9 @@ type ChatState = {
 };
 
 type ChatActions = {
-  createConversation: (characterId: string, getToken?: () => string | null) => Promise<string>;
-  sendMessage: (conversationId: string, text: string, persona: string, getToken?: () => string | null) => Promise<string>;
-  getConversation: (conversationId: string, getToken?: () => string | null) => Promise<ConversationMessage[]>;
+  createConversation: (characterId: string) => Promise<string>;
+  sendMessage: (conversationId: string, text: string, persona: string) => Promise<string>;
+  getConversation: (conversationId: string) => Promise<ConversationMessage[]>;
   getExistingConversationId: (characterId: string) => string | null;
   saveConversationId: (characterId: string, conversationId: string) => void;
   clearError: () => void;
@@ -24,17 +24,10 @@ export const useChatStore = create<ChatState & ChatActions>((set, get) => ({
   loading: false,
   error: undefined,
 
-  createConversation: async (characterId: string, getToken) => {
-    if (!getToken) {
-      const error = 'No token available';
-      set({ error });
-      throw new Error(error);
-    }
-    
+  createConversation: async (characterId: string) => {
     set({ loading: true, error: undefined });
     try {
-      const api = createChatApi(getToken);
-      const res = await api.createConversation({ characterId, userId: FIXED_USER_ID });
+      const res = await chatApi.createConversation({ characterId, userId: FIXED_USER_ID });
       if (res.code !== 0) throw new Error(res.message || 'create conversation failed');
       
       const conversationId = res.data.conversationId;
@@ -57,18 +50,11 @@ export const useChatStore = create<ChatState & ChatActions>((set, get) => ({
     }
   },
 
-  sendMessage: async (conversationId: string, text: string, persona: string, getToken) => {
-    if (!getToken) {
-      const error = 'No token available';
-      set({ error });
-      throw new Error(error);
-    }
-    
+  sendMessage: async (conversationId: string, text: string, persona: string) => {
     set({ loading: true, error: undefined });
     try {
-      const api = createChatApi(getToken);
       const payload: SendMessageRequest = { text, persona };
-      const res = await api.sendMessage(conversationId, payload);
+      const res = await chatApi.sendMessage(conversationId, payload);
       if (res.code !== 0) throw new Error(res.message || 'send message failed');
       return res.data.reply;
     } catch (error: any) {
@@ -79,17 +65,10 @@ export const useChatStore = create<ChatState & ChatActions>((set, get) => ({
     }
   },
 
-  getConversation: async (conversationId: string, getToken) => {
-    if (!getToken) {
-      const error = 'No token available';
-      set({ error });
-      throw new Error(error);
-    }
-    
+  getConversation: async (conversationId: string) => {
     set({ loading: true, error: undefined });
     try {
-      const api = createChatApi(getToken);
-      const res = await api.getConversation(conversationId);
+      const res = await chatApi.getConversation(conversationId);
       if (res.code !== 0) throw new Error(res.message || 'get conversation failed');
       return res.data.messages;
     } catch (error: any) {

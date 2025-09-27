@@ -15,7 +15,8 @@ import {
   useCharactersSetQuery,
 } from "@/modules/characters/characters.store";
 import { useChatCreateConversation, useChatGetExistingConversationId, useChatSaveConversationId } from "@/modules/chat/chat.store";
-import { useAuthToken } from "@/modules/auth/auth.store";
+import { useAuthToken, useAuthUser, useAuthLogout, useAuthInitializeAuth } from "@/modules/auth/auth.store";
+import { UserAvatar } from "@/components/UserAvatar";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
@@ -32,10 +33,18 @@ export default function Home() {
   const getExistingConversationId = useChatGetExistingConversationId();
   const saveConversationId = useChatSaveConversationId();
   const token = useAuthToken();
+  const user = useAuthUser();
+  const logout = useAuthLogout();
+  const initializeAuth = useAuthInitializeAuth();
+
+  useEffect(() => {
+    // 初始化认证状态
+    initializeAuth();
+  }, [initializeAuth]);
 
   useEffect(() => {
     if (token) {
-      load(q, () => token);
+      load(q);
     }
   }, [load, q, token]);
 
@@ -61,20 +70,37 @@ export default function Home() {
             <Link href="/settings" className="text-sm text-white/70 hover:text-white">
               Settings
             </Link>
-            <div className="flex items-center gap-2 ml-4">
-              <Link 
-                href="/auth/login" 
+        <div className="flex items-center gap-2 ml-4">
+          {user ? (
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <UserAvatar username={user.username} size="sm" />
+                <span className="text-sm text-white/80">{user.username}</span>
+              </div>
+              <button
+                onClick={() => logout()}
+                className="px-3 py-1 border-2 border-white/40 rounded-none bg-transparent text-white hover:border-white/60 hover:bg-white/10 transition-colors shadow-[2px_2px_0_0_#ffffff20] text-sm"
+              >
+                退出
+              </button>
+            </div>
+          ) : (
+            <>
+              <Link
+                href="/auth/login"
                 className="px-3 py-1 border-2 border-white/40 rounded-none bg-transparent text-white hover:border-white/60 hover:bg-white/10 transition-colors shadow-[2px_2px_0_0_#ffffff20] text-sm"
               >
                 登录
               </Link>
-              <Link 
-                href="/auth/register" 
+              <Link
+                href="/auth/register"
                 className="px-3 py-1 border-2 border-white rounded-none bg-white text-black hover:bg-white/90 transition-colors shadow-[2px_2px_0_0_#ffffff20] text-sm"
               >
                 注册
               </Link>
-            </div>
+            </>
+          )}
+        </div>
           </nav>
         </header>
 
@@ -127,10 +153,24 @@ export default function Home() {
                     className="group bg-transparent border-2 rounded-none border-white/30 hover:border-white/60 transition-colors shadow-[6px_6px_0_0_#ffffff20]"
                   >
                     <CardHeader className="px-5 pb-0">
-                      <CardTitle className="text-white uppercase tracking-wide">{c.name}</CardTitle>
-                      <CardDescription className="text-white/60">
-                        {c.topics.slice(0, 2).join(" · ")}
-                      </CardDescription>
+                      <div className="flex items-center gap-3">
+                        {c.avatar && (
+                          <img
+                            src={c.avatar}
+                            alt={c.name}
+                            className="w-12 h-12 rounded-none border-2 border-white/40 object-cover flex-shrink-0"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        )}
+                        <div>
+                          <CardTitle className="text-white uppercase tracking-wide">{c.name}</CardTitle>
+                          <CardDescription className="text-white/60">
+                            {c.topics.slice(0, 2).join(" · ")}
+                          </CardDescription>
+                        </div>
+                      </div>
                     </CardHeader>
                     <CardContent className="px-5 pb-5">
                       <div className="flex flex-wrap gap-2">
@@ -155,7 +195,7 @@ export default function Home() {
                             
                             if (!conversationId) {
                               // 如果没有现有会话，创建新的
-                              conversationId = await createConversation(c.id, () => token);
+                              conversationId = await createConversation(c.id);
                               saveConversationId(c.id, conversationId);
                             }
                             
