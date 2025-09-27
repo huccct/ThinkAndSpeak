@@ -244,7 +244,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         </div>
 
         <div className="flex-1 min-h-0 mb-6">
-          <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
+          <div className="space-y-4 max-h-96 overflow-y-auto pr-2 scrollbar-pixel">
             {messages.map((msg, i) => (
               <div
                 key={i}
