@@ -3,37 +3,55 @@
 import { useEffect, useMemo, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getCharacter } from "@/lib/characters";
 import { SkillToggle } from "@/lib/skills";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Mic, Square, ArrowLeft } from "lucide-react";
+import {
+  useCharacters,
+  useCharactersLoad,
+} from "@/modules/characters/characters.store";
 
 type Msg = { role: "user" | "assistant"; content: string; timestamp?: number };
 
 export default function ChatPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const resolvedParams = use(params);
-  const ch = useMemo(() => getCharacter(resolvedParams.id), [resolvedParams.id]);
+  const list = useCharacters();
+  const load = useCharactersLoad();
+  const ch = useMemo(() => list.find((c) => c.id === resolvedParams.id), [list, resolvedParams.id]);
   const [skills, setSkills] = useState<SkillToggle>({
     socratic: resolvedParams.id === "socrates",
     quotes: true,
     flashcards: true,
     memory: true,
   });
-  const [messages, setMessages] = useState<Msg[]>([
-    {
-      role: "assistant",
-      content: `你好！我是${ch?.name}。${ch?.sampleTopics[0] || "有什么想聊的吗？"}`,
-      timestamp: Date.now(),
-    },
-  ]);
+  const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [recording, setRecording] = useState(false);
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
-    if (!ch) router.replace("/");
-  }, [ch, router]);
+    if (list.length === 0) {
+      load();
+    }
+  }, [list.length, load]);
+
+  useEffect(() => {
+    if (messages.length === 0) {
+      const greet = `你好！${ch ? `我是${ch.name}。` : ""}${
+        // @ts-ignore backwards compat for static characters structure if present
+        ch?.sample_topics?.[0] || ch?.sampleTopics?.[0] || "有什么想聊的吗？"
+      }`;
+      setMessages([
+        {
+          role: "assistant",
+          content: greet,
+          timestamp: Date.now(),
+        },
+      ]);
+    }
+  }, [ch, messages.length]);
 
   function handleSendText() {
     if (!input.trim() || sending) return;
@@ -70,7 +88,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     }
   }
 
-  if (!ch) return null;
 
   return (
     <div
@@ -86,13 +103,22 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
           <div className="flex items-center gap-4">
             <Link
               href="/"
-              className="text-sm text-white/70 hover:text-white transition-colors"
+              className="flex items-center gap-1 text-sm text-white/70 hover:text-white transition-colors"
             >
-              ← 返回
+              <ArrowLeft className="h-4 w-4" />
+              返回
             </Link>
             <div>
-              <h1 className="text-xl font-semibold uppercase tracking-wider">{ch.name}</h1>
-              <p className="text-sm text-white/60">{ch.sampleTopics.slice(0, 2).join(" · ")}</p>
+              <h1 className="text-xl font-semibold uppercase tracking-wider">{ch?.name ?? "加载中"}</h1>
+              <p className="text-sm text-white/60">
+                {(
+                  // 兼容不同字段命名
+                  (ch && (// @ts-ignore legacy
+                    ch.sample_topics || ch.sampleTopics || ch.topics)) || []
+                )
+                  .slice(0, 2)
+                  .join(" · ")}
+              </p>
             </div>
           </div>
           <Link href="/settings" className="text-sm text-white/70 hover:text-white transition-colors">
@@ -205,7 +231,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                   : "border-white/40 hover:border-white/60 hover:bg-white/10"
               }`}
             >
-              {recording ? "⏹" : "🎙"}
+              {recording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
             </button>
           </div>
           <div className="mt-2 text-xs text-white/40">
