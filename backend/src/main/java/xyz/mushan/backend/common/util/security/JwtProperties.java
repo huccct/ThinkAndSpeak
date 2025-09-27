@@ -1,4 +1,4 @@
-package xyz.mushan.backend.common.security;
+package xyz.mushan.backend.common.util.security;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

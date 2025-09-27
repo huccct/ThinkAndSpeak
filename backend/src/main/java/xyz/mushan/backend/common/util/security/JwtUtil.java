@@ -1,4 +1,4 @@
-package xyz.mushan.backend.common.security;
+package xyz.mushan.backend.common.util.security;
 
 import cn.hutool.jwt.JWT;
 import cn.hutool.jwt.JWTUtil;
