@@ -37,6 +37,7 @@ public class ConversationService {
     public ConversationEntity createConversation(Long characterId, String userId) {
         ConversationEntity conv = ConversationEntity.builder()
                 .id(snowflake.nextId())
+                .userId(userId)
                 .characterId(characterId)
                 .build();
         conv.setCreatedAt(LocalDateTime.now());
@@ -55,12 +56,11 @@ public class ConversationService {
         ConversationEntity conv = conversationRepository.findById(conversationId)
                 .orElseThrow(() -> new RuntimeException("Conversation not found: " + conversationId));
         List<MessageEntity> messages = messageRepository.findByConversationIdOrderByCreatedAtAsc(conversationId);
-        List<MessageDto> dtos = messages.stream()
+        List<MessageDto> messageDtos = messages.stream()
                 .map(m -> new MessageDto(m.getId(), m.getSender(), m.getContent(), m.getMetadata(), m.getCreatedAt()))
                 .collect(Collectors.toList());
-        return new ConversationDto(conv.getId(), conv.getCharacterId(), dtos);
+        return new ConversationDto(conv.getId(), conv.getCharacterId(), conv.getTitle(), messageDtos);
     }
-
     /**
      * 向会话中追加消息
      * 
@@ -88,5 +88,17 @@ public class ConversationService {
         conversationRepository.save(conv);
 
         return new MessageDto(me.getId(), me.getSender(), me.getContent(), me.getMetadata(), me.getCreatedAt());
+    }
+
+    /**
+     * 获取用户历史会话
+     * @param userId 用户ID
+     * @return 历史会话数据传输对象列表
+     */
+    public List<ConversationDto> getHistory(String userId) {
+        List<ConversationEntity> conversations = conversationRepository.findByUserId(userId);
+        return conversations.stream()
+                .map(c -> new ConversationDto(c.getId(), c.getCharacterId(), c.getTitle(), null))
+                .collect(Collectors.toList());
     }
 }

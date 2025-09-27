@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.ProviderNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import xyz.mushan.backend.common.util.IdConverter;
@@ -22,6 +21,7 @@ import xyz.mushan.backend.modules.chat.dto.response.CreateConversationResponse;
 import xyz.mushan.backend.modules.chat.dto.response.SendMessageResponse;
 import xyz.mushan.backend.modules.llm.adapter.enums.LLMProvider;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -90,5 +90,17 @@ public class ConversationController {
         String reply = chatService.generateReply(persona, history, text, LLMProvider.GEMINI);
         MessageDto assistantMsg = conversationService.appendMessage(Long.valueOf(id), "CHARACTER", reply, null);
         return ApiResponse.success(new SendMessageResponse(reply, assistantMsg.id()));
+    }
+
+    /**
+     * 用户历史会话
+     * @param userId 用户ID
+     * @return 会话数据传输对象数组
+     */
+    @GetMapping("/history/{userId}")
+    @Operation(summary = "用户历史会话", description = "获取指定用户的历史会话")
+    public ApiResponse<List<ConversationDto>> getHistory(
+            @Parameter(description = "用户ID") @PathVariable("userId") String userId) {
+        return ApiResponse.success(conversationService.getHistory(userId));
     }
 }
