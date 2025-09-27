@@ -10,7 +10,6 @@ import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -28,7 +27,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import xyz.mushan.backend.common.security.JwtUtil;
+import xyz.mushan.backend.common.util.security.JwtUtil;
 import xyz.mushan.backend.modules.auth.repository.UserRepository;
 
 import javax.annotation.Nonnull;
@@ -46,7 +45,6 @@ import java.util.Map;
 public class SecurityConfig {
 
     private final JwtUtil jwtUtil;
-    private final UserRepository userRepository;
 
     /**
      * 密码加密器配置，使用BCrypt算法进行密码加密
@@ -114,6 +112,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // 允许登录和注册接口无需认证
                         .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
+                        // 允许角色查询接口无需认证
+                        .requestMatchers("/api/chat/characters/**").permitAll()
                         // 其他所有请求都需要认证
                         .anyRequest().authenticated())
                 // 在用户名密码认证过滤器之前添加自定义令牌过滤器

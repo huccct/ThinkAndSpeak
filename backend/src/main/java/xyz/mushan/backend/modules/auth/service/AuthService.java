@@ -6,7 +6,7 @@ import org.springframework.security.authentication.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import xyz.mushan.backend.common.security.JwtUtil;
+import xyz.mushan.backend.common.util.security.JwtUtil;
 import xyz.mushan.backend.modules.auth.dto.AuthResponse;
 import xyz.mushan.backend.modules.auth.dto.LoginRequest;
 import xyz.mushan.backend.modules.auth.dto.RegisterRequest;
