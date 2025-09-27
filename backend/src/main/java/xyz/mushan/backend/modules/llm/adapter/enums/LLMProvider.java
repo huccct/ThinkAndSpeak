@@ -12,6 +12,7 @@ public enum LLMProvider {
     OPENAI("openAIChatGPTAdapter"),
     DEEPSEEK("deepSeekAdapter"),
     OLLAMA("ollamaAdapter"),
+    GEMINI("geminiAdapter"),
     MOCK("mockLLMAdapter");
 
     private final String beanName;
