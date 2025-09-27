@@ -53,68 +53,12 @@ services:
       retries: 10
     networks:
       - ThinkAndSpeakNet
-
-  rocketmq-namesrv:
-    image: apache/rocketmq:5.3.1
-    container_name: ts-rocketmq-namesrv
-    restart: unless-stopped
-    command: ["sh", "-c", "bin/mqnamesrv"]
-    ports:
-      - "9876:9876"
-    volumes:
-      - rocketmq-data:/home/rocketmq/store
-      - rocketmq-logs:/home/rocketmq/logs
-    healthcheck:
-      test: ["CMD", "bash", "-c", "nc -z 127.0.0.1 9876"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-    networks:
-      - ThinkAndSpeakNet
-
-  rocketmq-broker:
-    image: apache/rocketmq:5.3.1
-    container_name: ts-rocketmq-broker
-    restart: unless-stopped
-    depends_on:
-      rocketmq-namesrv:
-        condition: service_healthy
-    environment:
-      NAMESRV_ADDR: rocketmq-namesrv:9876
-    command: ["sh", "-c", "bin/mqbroker -n rocketmq-namesrv:9876"]
-    ports:
-      - "10911:10911"
-      - "10909:10909"
-    volumes:
-      - rocketmq-data:/home/rocketmq/store
-      - rocketmq-logs:/home/rocketmq/logs
-    healthcheck:
-      test: ["CMD", "bash", "-c", "nc -z 127.0.0.1 10911"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-    networks:
-      - ThinkAndSpeakNet
-
-  rocketmq-dashboard:
-    image: apacherocketmq/rocketmq-dashboard:latest
-    container_name: ts-rocketmq-dashboard
-    restart: unless-stopped
-    depends_on:
-      rocketmq-namesrv:
-        condition: service_healthy
-    environment:
-      JAVA_OPTS: -Drocketmq.namesrv.addr=rocketmq-namesrv:9876
-    ports:
-      - "8081:8080"
-    networks:
-      - ThinkAndSpeakNet
-
-  ollama:
-    image: "ollama/ollama:latest"
-    container_name: ts-ollama
-    restart: unless-stopped
-    ports:
-      - "11434:11434"
-    networks:
-      - ThinkAndSpeakNet
+#
+#  ollama:
+#    image: "ollama/ollama:latest"
+#    container_name: ts-ollama
+#    restart: unless-stopped
+#    ports:
+#      - "11434:11434"
+#    networks:
+#      - ThinkAndSpeakNet
