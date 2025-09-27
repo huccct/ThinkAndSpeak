@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,8 +14,12 @@ import {
   useCharactersLoad,
   useCharactersSetQuery,
 } from "@/modules/characters/characters.store";
+import { createConversation } from "@/modules/chat/chat.service";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
+  const [creatingId, setCreatingId] = useState<string | null>(null);
   const list = useCharacters();
   const loading = useCharactersLoading();
   const error = useCharactersError();
@@ -119,12 +123,23 @@ export default function Home() {
                         ))}
                       </div>
                       <div className="mt-4">
-                        <Link
-                          href={`/chat/${c.id}`}
-                          className="block w-full rounded-none border-2 border-white/40 px-4 py-2 text-center text-sm text-white transition-colors hover:border-white/80 hover:bg-white/10 shadow-[4px_4px_0_0_#ffffff20]"
+                        <button
+                          onClick={async () => {
+                            try {
+                              setCreatingId(c.id);
+                              const conversationId = await createConversation(c.id);
+                              router.push(`/chat/${c.id}?session=${conversationId}`);
+                            } catch (e) {
+                              console.error(e);
+                            } finally {
+                              setCreatingId(null);
+                            }
+                          }}
+                          disabled={creatingId === c.id}
+                          className="w-full rounded-none border-2 border-white/40 px-4 py-2 text-center text-sm text-white transition-colors hover:border-white/80 hover:bg-white/10 shadow-[4px_4px_0_0_#ffffff20] disabled:opacity-50"
                         >
-                          开始对话
-                        </Link>
+                          {creatingId === c.id ? "创建会话中…" : "开始对话"}
+                        </button>
                       </div>
                     </CardContent>
                   </Card>
