@@ -9,10 +9,10 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public enum LLMProvider {
-    OPENAI("OpenAIChatGPTAdapter"),
-    DEEPSEEK("DeepSeekAdapter"),
-    OLLAMA("OllamaAdapter"),
-    MOCK("MockLLMAdapter");
+    OPENAI("openAIChatGPTAdapter"),
+    DEEPSEEK("deepSeekAdapter"),
+    OLLAMA("ollamaAdapter"),
+    MOCK("mockLLMAdapter");
 
     private final String beanName;
 

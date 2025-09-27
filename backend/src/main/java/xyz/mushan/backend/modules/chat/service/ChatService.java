@@ -1,6 +1,7 @@
 package xyz.mushan.backend.modules.chat.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import java.util.Map;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ChatService {
 
     /**
@@ -62,6 +64,7 @@ public class ChatService {
             return adapter.generate(prompt);
         } catch (Exception e) {
             // 当LLM调用失败时，降级到本地模拟模式
+            log.error("LLM调用失败，降级到本地模拟模式", e);
         }
 
         // 本地模拟回复

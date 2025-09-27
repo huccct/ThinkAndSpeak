@@ -47,7 +47,7 @@ springdoc:
       packages-to-scan: xyz.mushan.backend.modules.chat
 
 server:
-  port: 8080
+  port: 8089
 
 id:
   snowflake:
@@ -63,4 +63,4 @@ llm:
     model: deepseek-chat
   ollama:
     base-url: http://localhost:11434
-    model: llama3
+    model: llama3:8b

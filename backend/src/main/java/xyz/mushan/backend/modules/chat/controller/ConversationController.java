@@ -22,6 +22,8 @@ import xyz.mushan.backend.modules.chat.dto.response.CreateConversationResponse;
 import xyz.mushan.backend.modules.chat.dto.response.SendMessageResponse;
 import xyz.mushan.backend.modules.llm.adapter.enums.LLMProvider;
 
+import java.util.Optional;
+
 /**
  * @author mushan
  *         会话控制器，处理会话相关的HTTP请求
@@ -74,8 +76,8 @@ public class ConversationController {
     public ApiResponse<SendMessageResponse> sendMessage(
             @Parameter(description = "会话ID") @PathVariable("id") String id,
             @Parameter(description = "请求体，包含text和persona") @RequestBody SendMessageRequest body) {
-        String text = body.getText() == null ? "" : body.getText();
-        String persona = body.getPersona() == null ? "" : body.getPersona();
+        String text = Optional.ofNullable(body.getText()).orElse("");
+        String persona = Optional.ofNullable(body.getPersona()).orElse("");
         // 保存用户消息
         conversationService.appendMessage(IdConverter.parse(id), "USER", text, null);
         // 读取历史（简化：按 conversation 全部消息）
