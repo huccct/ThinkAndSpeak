@@ -6,5 +6,6 @@ import java.util.List;
 public record ConversationDto(
         Long id,
         Long characterId,
+        String title,
         List<MessageDto> messages) implements Serializable {
 }

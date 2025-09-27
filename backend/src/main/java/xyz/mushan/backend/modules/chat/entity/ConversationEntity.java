@@ -34,6 +34,16 @@ public class ConversationEntity implements Serializable {
     private Long characterId;
 
     /**
+     * 用户ID
+     */
+    private String userId;
+
+    /**
+     * 标题
+     */
+    private String title;
+
+    /**
      * 创建时间
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
