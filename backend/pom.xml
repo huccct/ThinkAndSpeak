@@ -133,7 +133,7 @@
         </dependency>
         <dependency>
             <groupId>cn.hutool</groupId>
-            <artifactId>hutool-core</artifactId>
+            <artifactId>hutool-all</artifactId>
             <version>5.8.32</version>
         </dependency>
         <dependency>

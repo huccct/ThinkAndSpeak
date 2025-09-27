@@ -1,68 +1,93 @@
+# 服务器配置
+server:
+  port: 8089
+
+# Spring 相关配置
 spring:
+  # 应用名称
   application:
     name: think-and-speak-backend
+
+  # AI 聊天客户端配置（当前未启用）
   ai:
     chat:
       client:
         enabled: false
+
+  # 数据库连接配置
   datasource:
     url: jdbc:mysql://localhost:3306/think_and_speak?useSSL=false&serverTimezone=UTC&characterEncoding=utf8
     username: root
     password: password
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # JPA 配置
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: update  # 自动更新数据库表结构
+    show-sql: false      # 显示 SQL 语句
     properties:
       hibernate:
-        format_sql: true
+        format_sql: true  # 格式化 SQL 输出
+
+  # 缓存配置，使用 Redis
   cache:
     type: redis
+
+  # Redis 数据配置
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: localhost   # Redis 主机地址
+      port: 6379        # Redis 端口
 
-security:
-  token:
-    value: e609e503-4786-4363-a349-35f51b6e2f8a
+# JWT 配置
+jwt:
+  secret: "716e0caa-21d0-4724-96d3-3d6e0e6a4862"  # JWT 加密密钥
+  expiration: 3600000 # 1小时，单位毫秒
 
+# RocketMQ 配置
 rocketmq:
-  name-server: localhost:9876
+  name-server: localhost:9876  # Name Server 地址
   producer:
-    group: think_and_speak_producer
+    group: think_and_speak_producer  # 生产者组名
 
+# SpringDoc OpenAPI 配置
 springdoc:
   swagger-ui:
-    enabled: true
-    path: /swagger-ui.html
+    enabled: true               # 启用 Swagger UI
+    path: /swagger-ui.html      # Swagger UI 访问路径
   api-docs:
-    path: /v3/api-docs
-    enabled: true
+    path: /v3/api-docs          # API 文档访问路径
+    enabled: true               # 启用 API 文档
   group-configs:
-    - group: 'demo'
+    - group: 'demo'             # demo 模块 API 分组
       packages-to-scan: xyz.mushan.backend.modules.demo
-    - group: 'chat'
+    - group: 'chat'             # chat 模块 API 分组
       packages-to-scan: xyz.mushan.backend.modules.chat
+    - group: 'system'           # system 模块 API 分组
+      packages-to-scan: xyz.mushan.backend.modules.system
 
-server:
-  port: 8089
+# 日志级别配置
+logging:
+  level:
+    org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer: ERROR
 
+# ID 生成器配置（Snowflake 算法）
 id:
   snowflake:
-    worker-id: 1
-    datacenter-id: 1
+    worker-id: 1          # 工作节点 ID
+    datacenter-id: 1      # 数据中心 ID
 
+# 大语言模型 (LLM) 配置
 llm:
   openai:
-    api-key: sk-xxxx
-    model: gpt-4o-mini
+    api-key: sk-xxxx      # OpenAI API 密钥
+    model: gpt-4o-mini    # 使用的模型
   deepseek:
-    api-key: sk-xxxx
-    model: deepseek-chat
+    api-key: sk-xxxx      # DeepSeek API 密钥
+    model: deepseek-chat  # 使用的模型
   ollama:
-    base-url: http://localhost:11434
-    model: llama3:8b
+    base-url: http://localhost:11434  # Ollama 服务地址
+    model: llama3:8b                  # 使用的模型
   gemini:
-    api-key: xxx
+    api-key: AIzaSyCmBD3CaQDsLFMLX2_6bKbq9bCAFCLODP8  # Gemini API 密钥
