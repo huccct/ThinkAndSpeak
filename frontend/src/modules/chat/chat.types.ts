@@ -25,4 +25,22 @@ export type SendMessageResponse = {
   };
 };
 
+export type ConversationMessage = {
+  id: string;
+  sender: string;
+  content: string;
+  metadata: string | null;
+  createdAt: number[]; 
+};
+
+export type GetConversationResponse = {
+  code: number;
+  message: string;
+  data: {
+    id: string;
+    characterId: string;
+    messages: ConversationMessage[];
+  };
+};
+
 

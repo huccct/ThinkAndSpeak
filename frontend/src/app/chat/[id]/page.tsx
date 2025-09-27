@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState, use, useRef } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { SkillToggle } from "@/lib/skills";
 import { Input } from "@/components/ui/input";
@@ -11,7 +10,7 @@ import {
   useCharacters,
   useCharactersLoad,
 } from "@/modules/characters/characters.store";
-import { sendChatMessage } from "@/modules/chat/chat.service";
+import { sendChatMessage, getConversation } from "@/modules/chat/chat.service";
 
 type Msg = { role: "user" | "assistant"; content: string; timestamp?: number };
 
@@ -40,7 +39,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     }
   }, [list.length, load]);
 
-  // 初始化会话ID
+  // 初始化会话ID并加载历史消息
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
@@ -48,12 +47,39 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       if (sessionId) {
         setConversationId(sessionId);
         console.log('会话ID已设置:', sessionId); // 调试日志
+        
+        // 加载会话历史消息
+        loadConversationHistory(sessionId);
       }
     }
   }, []);
 
+  // 加载会话历史消息
+  const loadConversationHistory = async (conversationId: string) => {
+    try {
+      const historyMessages = await getConversation(conversationId);
+      if (historyMessages.length > 0) {
+        const convertedMessages: Msg[] = historyMessages.map(msg => ({
+          role: msg.sender === 'USER' ? 'user' : 'assistant',
+          content: msg.content,
+          timestamp: convertCreatedAtToTimestamp(msg.createdAt),
+        }));
+        setMessages(convertedMessages);
+      }
+    } catch (error) {
+      console.error('加载会话历史失败:', error);
+    }
+  };
+
+  // 转换后端时间格式为时间戳
+  const convertCreatedAtToTimestamp = (createdAt: number[]): number => {
+    const [year, month, day, hour, minute, second] = createdAt;
+    return new Date(year, month - 1, day, hour, minute, second).getTime();
+  };
+
   useEffect(() => {
-    if (messages.length === 0) {
+    // 只有在没有历史消息且没有会话ID时才显示欢迎消息
+    if (messages.length === 0 && !conversationId) {
       const greet = `你好！${ch ? `我是${ch.name}。` : ""}${
         // @ts-ignore backwards compat for static characters structure if present
         ch?.sample_topics?.[0] || ch?.sampleTopics?.[0] || "有什么想聊的吗？"
@@ -66,7 +92,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         },
       ]);
     }
-  }, [ch, messages.length]);
+  }, [ch, messages.length, conversationId]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

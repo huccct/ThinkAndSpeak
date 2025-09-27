@@ -1,5 +1,5 @@
 import { http } from '@/lib/http';
-import type { CreateConversationRequest, CreateConversationResponse, SendMessageRequest, SendMessageResponse } from './chat.types';
+import type { CreateConversationRequest, CreateConversationResponse, SendMessageRequest, SendMessageResponse, GetConversationResponse } from './chat.types';
 
 export const chatApi = {
   /**
@@ -13,6 +13,12 @@ export const chatApi = {
    */
   sendMessage: (conversationId: string, payload: SendMessageRequest) =>
     http.post<SendMessageResponse>(`/api/chat/conversations/${conversationId}/message`, payload),
+
+  /**
+   * get conversation details
+   */
+  getConversation: (conversationId: string) =>
+    http.get<GetConversationResponse>(`/api/chat/conversations/${conversationId}`),
 };
 
 
