@@ -11,4 +11,18 @@ export type CreateConversationResponse = {
   };
 };
 
+export type SendMessageRequest = {
+  text: string;
+  persona: string;
+};
+
+export type SendMessageResponse = {
+  code: number;
+  message: string;
+  data: {
+    reply: string;
+    assistantMessageId: number;
+  };
+};
+
 

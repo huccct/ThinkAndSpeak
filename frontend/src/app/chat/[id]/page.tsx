@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, use } from "react";
+import { useEffect, useMemo, useState, use, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { SkillToggle } from "@/lib/skills";
@@ -11,15 +11,16 @@ import {
   useCharacters,
   useCharactersLoad,
 } from "@/modules/characters/characters.store";
+import { sendChatMessage } from "@/modules/chat/chat.service";
 
 type Msg = { role: "user" | "assistant"; content: string; timestamp?: number };
 
 export default function ChatPage({ params }: { params: Promise<{ id: string }> }) {
-  const router = useRouter();
   const resolvedParams = use(params);
   const list = useCharacters();
   const load = useCharactersLoad();
   const ch = useMemo(() => list.find((c) => c.id === resolvedParams.id), [list, resolvedParams.id]);
+
   const [skills, setSkills] = useState<SkillToggle>({
     socratic: resolvedParams.id === "socrates",
     quotes: true,
@@ -30,12 +31,26 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const [input, setInput] = useState("");
   const [recording, setRecording] = useState(false);
   const [sending, setSending] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (list.length === 0) {
       load();
     }
   }, [list.length, load]);
+
+  // 初始化会话ID
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const sessionId = urlParams.get('session');
+      if (sessionId) {
+        setConversationId(sessionId);
+        console.log('会话ID已设置:', sessionId); // 调试日志
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (messages.length === 0) {
@@ -53,8 +68,32 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     }
   }, [ch, messages.length]);
 
-  function handleSendText() {
-    if (!input.trim() || sending) return;
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  async function handleSendText() {
+    if (!input.trim() || sending || !ch) return;
+    
+    if (!conversationId) {
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session');
+        if (sessionId) {
+          setConversationId(sessionId);
+          console.log('重新获取会话ID:', sessionId);
+        } else {
+          console.error('没有找到会话ID');
+          return;
+        }
+      } else {
+        return;
+      }
+    }
     
     const userMsg: Msg = {
       role: "user",
@@ -63,19 +102,33 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     };
     
     setMessages(prev => [...prev, userMsg]);
+    const messageText = input.trim();
     setInput("");
     setSending(true);
     
-    // TODO: 实际 API 调用
-    setTimeout(() => {
-      const reply: Msg = {
+    try {
+      const currentConversationId = conversationId || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('session') : null);
+      if (!currentConversationId) {
+        throw new Error('会话ID不可用');
+      }
+      const reply = await sendChatMessage(currentConversationId, messageText, ch.name);
+      const assistantMsg: Msg = {
         role: "assistant",
-        content: "这是模拟回复，实际会调用 LLM API。",
+        content: reply,
         timestamp: Date.now(),
       };
-      setMessages(prev => [...prev, reply]);
+      setMessages(prev => [...prev, assistantMsg]);
+    } catch (error) {
+      console.error('发送消息失败:', error);
+      const errorMsg: Msg = {
+        role: "assistant",
+        content: "抱歉，发送消息时出现错误，请稍后重试。",
+        timestamp: Date.now(),
+      };
+      setMessages(prev => [...prev, errorMsg]);
+    } finally {
       setSending(false);
-    }, 1000);
+    }
   }
 
   function handleVoiceRecord() {
@@ -198,6 +251,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                 </div>
               </div>
             )}
+            <div ref={messagesEndRef} />
           </div>
         </div>
 
