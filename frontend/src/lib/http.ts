@@ -27,6 +27,7 @@ export interface HttpClientOptions {
   baseURL?: string; // default: NEXT_PUBLIC_API_BASE_URL || ''
   defaultHeaders?: Record<string, string>;
   timeoutMs?: number;
+  getToken?: () => string | null; // 动态获取token的函数
 }
 
 function buildURL(baseURL: string, path: string, query?: RequestOptions['query']) {
@@ -51,13 +52,6 @@ async function parseResponse(res: Response, mode: ParseMode = 'json') {
 
 export function createHttpClient(opts: HttpClientOptions = {}) {
   const baseURL = opts.baseURL ?? '';
-  const defaultHeaders = {
-    ...(opts.defaultHeaders ?? {}),
-    Accept: 'application/json, text/plain, */*',
-    ...(process.env.NEXT_PUBLIC_API_TOKEN || 'e609e503-4786-4363-a349-35f51b6e2f8a'
-      ? { Authorization: `Bearer ${process.env.NEXT_PUBLIC_API_TOKEN || 'e609e503-4786-4363-a349-35f51b6e2f8a'}` }
-      : {}),
-  } as Record<string, string>;
   const defaultTimeout = opts.timeoutMs ?? 30000;
 
   async function request<T = unknown>(path: string, options: RequestOptions = {}): Promise<T> {
@@ -65,10 +59,15 @@ export function createHttpClient(opts: HttpClientOptions = {}) {
     const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? defaultTimeout);
 
     try {
+      // 动态获取token
+      const token = opts.getToken?.();
+      
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        ...defaultHeaders,
+        Accept: 'application/json, text/plain, */*',
+        ...(opts.defaultHeaders ?? {}),
         ...(options.headers as Record<string, string>),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       };
 
       const url = buildURL(baseURL, path, options.query);

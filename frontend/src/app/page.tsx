@@ -14,7 +14,8 @@ import {
   useCharactersLoad,
   useCharactersSetQuery,
 } from "@/modules/characters/characters.store";
-import { createConversation, getExistingConversationId, saveConversationId } from "@/modules/chat/chat.service";
+import { useChatCreateConversation, useChatGetExistingConversationId, useChatSaveConversationId } from "@/modules/chat/chat.store";
+import { useAuthToken } from "@/modules/auth/auth.store";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
@@ -26,10 +27,17 @@ export default function Home() {
   const q = useCharactersQuery();
   const load = useCharactersLoad();
   const setQuery = useCharactersSetQuery();
+  
+  const createConversation = useChatCreateConversation();
+  const getExistingConversationId = useChatGetExistingConversationId();
+  const saveConversationId = useChatSaveConversationId();
+  const token = useAuthToken();
 
   useEffect(() => {
-    load();
-  }, [load]);
+    if (token) {
+      load(q, () => token);
+    }
+  }, [load, q, token]);
 
   return (
     <div
@@ -53,6 +61,20 @@ export default function Home() {
             <Link href="/settings" className="text-sm text-white/70 hover:text-white">
               Settings
             </Link>
+            <div className="flex items-center gap-2 ml-4">
+              <Link 
+                href="/auth/login" 
+                className="px-3 py-1 border-2 border-white/40 rounded-none bg-transparent text-white hover:border-white/60 hover:bg-white/10 transition-colors shadow-[2px_2px_0_0_#ffffff20] text-sm"
+              >
+                登录
+              </Link>
+              <Link 
+                href="/auth/register" 
+                className="px-3 py-1 border-2 border-white rounded-none bg-white text-black hover:bg-white/90 transition-colors shadow-[2px_2px_0_0_#ffffff20] text-sm"
+              >
+                注册
+              </Link>
+            </div>
           </nav>
         </header>
 
@@ -65,7 +87,7 @@ export default function Home() {
                 placeholder="搜索角色关键字…"
                 value={q}
                 onChange={(e) => setQuery(e.target.value)}
-                className="h-11 border-2 rounded-none border-white/40 text-white placeholder:text-white/40 focus-visible:border-white focus-visible:ring-0 shadow-[4px_4px_0_0_#ffffff20]"
+                className="h-11 border-2 rounded-none border-white/40 text-white placeholder:text-white/40 focus-visible:border-white focus-visible:ring-0 shadow-[4px_4px_0_0_#ffffff20] bg-black"
               />
               <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-white/40 text-sm">
                 ⌘K
@@ -133,7 +155,7 @@ export default function Home() {
                             
                             if (!conversationId) {
                               // 如果没有现有会话，创建新的
-                              conversationId = await createConversation(c.id);
+                              conversationId = await createConversation(c.id, () => token);
                               saveConversationId(c.id, conversationId);
                             }
                             

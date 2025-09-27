@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { charactersApi } from './characters.api';
+import { createCharactersApi } from './characters.api';
 import type { CharacterItem } from './characters.types';
 import { mapToItem } from './characters.types';
 
@@ -12,7 +12,7 @@ type State = {
 
 type Actions = {
   setQuery: (q: string) => void;
-  load: (q?: string) => Promise<void>;
+  load: (q?: string, getToken?: () => string | null) => Promise<void>;
   clear: () => void;
 };
 
@@ -25,11 +25,17 @@ export const useCharactersStore = create<State & Actions>((set, get) => ({
   setQuery: (q) => set({ query: q }),
   clear: () => set({ list: [], error: undefined }),
 
-  load: async (q) => {
+  load: async (q, getToken) => {
+    if (!getToken) {
+      set({ error: 'No token available' });
+      return;
+    }
+    
     const query = q ?? get().query ?? '';
     set({ loading: true, error: undefined });
     try {
-      const res = await charactersApi.list(query);
+      const api = createCharactersApi(getToken);
+      const res = await api.list(query);
       if (res.code !== 0) throw new Error(res.message || 'characters api error');
       const list = Array.isArray(res.data) ? res.data.map(mapToItem) : [];
       set({ list });
