@@ -14,7 +14,7 @@ import {
   useCharactersLoad,
   useCharactersSetQuery,
 } from "@/modules/characters/characters.store";
-import { createConversation } from "@/modules/chat/chat.service";
+import { createConversation, getExistingConversationId, saveConversationId } from "@/modules/chat/chat.service";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
@@ -123,23 +123,32 @@ export default function Home() {
                         ))}
                       </div>
                       <div className="mt-4">
-                        <button
-                          onClick={async () => {
-                            try {
-                              setCreatingId(c.id);
-                              const conversationId = await createConversation(c.id);
-                              router.push(`/chat/${c.id}?session=${conversationId}`);
-                            } catch (e) {
-                              console.error(e);
-                            } finally {
-                              setCreatingId(null);
+                      <button
+                        onClick={async () => {
+                          try {
+                            setCreatingId(c.id);
+                            
+                            // 先检查是否已有该角色的会话
+                            let conversationId = getExistingConversationId(c.id);
+                            
+                            if (!conversationId) {
+                              // 如果没有现有会话，创建新的
+                              conversationId = await createConversation(c.id);
+                              saveConversationId(c.id, conversationId);
                             }
-                          }}
-                          disabled={creatingId === c.id}
-                          className="w-full rounded-none border-2 border-white/40 px-4 py-2 text-center text-sm text-white transition-colors hover:border-white/80 hover:bg-white/10 shadow-[4px_4px_0_0_#ffffff20] disabled:opacity-50"
-                        >
-                          {creatingId === c.id ? "创建会话中…" : "开始对话"}
-                        </button>
+                            
+                            router.push(`/chat/${c.id}?session=${conversationId}`);
+                          } catch (e) {
+                            console.error(e);
+                          } finally {
+                            setCreatingId(null);
+                          }
+                        }}
+                        disabled={creatingId === c.id}
+                        className="w-full rounded-none border-2 border-white/40 px-4 py-2 text-center text-sm text-white transition-colors hover:border-white/80 hover:bg-white/10 shadow-[4px_4px_0_0_#ffffff20] disabled:opacity-50"
+                      >
+                        {creatingId === c.id ? "创建会话中…" : "开始对话"}
+                      </button>
                       </div>
                     </CardContent>
                   </Card>
