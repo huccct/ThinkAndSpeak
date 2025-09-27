@@ -64,8 +64,8 @@ springdoc:
       packages-to-scan: xyz.mushan.backend.modules.demo
     - group: 'chat'             # chat 模块 API 分组
       packages-to-scan: xyz.mushan.backend.modules.chat
-    - group: 'system'           # system 模块 API 分组
-      packages-to-scan: xyz.mushan.backend.modules.system
+    - group: 'auth'           # system 模块 API 分组
+      packages-to-scan: xyz.mushan.backend.modules.auth
 
 # 日志级别配置
 logging:
