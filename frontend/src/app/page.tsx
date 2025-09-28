@@ -78,7 +78,11 @@ export default function Home() {
                 <span className="text-sm text-white/80">{user.username}</span>
               </div>
               <button
-                onClick={() => logout()}
+                onClick={() => {
+                  logout();
+                  // 退出登录后刷新页面以立即更新状态
+                  window.location.reload();
+                }}
                 className="px-3 py-1 border-2 border-white/40 rounded-none bg-transparent text-white hover:border-white/60 hover:bg-white/10 transition-colors shadow-[2px_2px_0_0_#ffffff20] text-sm"
               >
                 退出
