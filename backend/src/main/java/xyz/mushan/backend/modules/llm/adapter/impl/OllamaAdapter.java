@@ -8,6 +8,7 @@ import xyz.mushan.backend.modules.llm.adapter.LLMAdapter;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * Ollama 本地适配器
@@ -45,5 +46,10 @@ public class OllamaAdapter implements LLMAdapter {
             return response.getBody().get("response").toString();
         }
         return "[Ollama] 无返回内容";
+    }
+
+    @Override
+    public void generateStream(String prompt, Consumer<String> onChunk, Consumer<Throwable> onError, Runnable onComplete) throws Exception {
+
     }
 }

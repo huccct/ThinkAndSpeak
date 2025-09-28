@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import xyz.mushan.backend.modules.llm.adapter.LLMAdapter;
 
+import java.util.function.Consumer;
+
 /**
  * Google Gemini Adapter
  * @author mushan
@@ -38,5 +40,10 @@ public class GeminiAdapter implements LLMAdapter {
         } catch (Exception e) {
             return "[Gemini] 调用失败: " + e.getMessage();
         }
+    }
+
+    @Override
+    public void generateStream(String prompt, Consumer<String> onChunk, Consumer<Throwable> onError, Runnable onComplete) throws Exception {
+
     }
 }

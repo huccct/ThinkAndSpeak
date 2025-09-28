@@ -8,6 +8,7 @@ import xyz.mushan.backend.modules.llm.adapter.LLMAdapter;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * DeepSeek 适配器
@@ -51,5 +52,10 @@ public class DeepSeekAdapter implements LLMAdapter {
             }
         }
         return "[DeepSeek] 无返回内容";
+    }
+
+    @Override
+    public void generateStream(String prompt, Consumer<String> onChunk, Consumer<Throwable> onError, Runnable onComplete) throws Exception {
+
     }
 }
