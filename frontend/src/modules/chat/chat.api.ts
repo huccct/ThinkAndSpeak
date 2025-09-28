@@ -1,5 +1,5 @@
 import { createHttpClient } from '@/lib/http';
-import type { CreateConversationRequest, CreateConversationResponse, SendMessageRequest, SendMessageResponse, GetConversationResponse } from './chat.types';
+import type { CreateConversationRequest, CreateConversationResponse, SendMessageRequest, SendMessageResponse, GetConversationResponse, GetConversationHistoryResponse } from './chat.types';
 
 export const chatApi = {
   /**
@@ -24,6 +24,14 @@ export const chatApi = {
   getConversation: (conversationId: string) => {
     const http = createHttpClient();
     return http.get<GetConversationResponse>(`/api/chat/conversations/${conversationId}`);
+  },
+
+  /**
+   * get conversation history
+   */
+  getConversationHistory: () => {
+    const http = createHttpClient();
+    return http.get<GetConversationHistoryResponse>('/api/chat/conversations/history');
   },
 };
 

@@ -11,30 +11,15 @@ import {
   useCharactersLoading,
   useCharactersError 
 } from "@/modules/characters/characters.store";
+import { chatApi } from "@/modules/chat/chat.api";
+import type { ConversationHistoryItem } from "@/modules/chat/chat.types";
 import { ArrowLeft, MessageCircle } from "lucide-react";
-
-type SessionMessage = {
-  role: "user" | "assistant";
-  content: string;
-  timestamp: number;
-};
-
-type Session = {
-  id: string;
-  characterId: string;
-  title: string;
-  lastMessage: string;
-  messageCount: number;
-  createdAt: number;
-  updatedAt: number;
-  duration: number; // in minutes
-  messages: SessionMessage[];
-};
 
 export default function SessionsPage() {
   const router = useRouter();
-  const [sessions, setSessions] = useState<Session[]>([]);
+  const [sessions, setSessions] = useState<ConversationHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   // 使用角色store
   const characters = useCharacters();
@@ -50,17 +35,19 @@ export default function SessionsPage() {
     }
   }, [characters.length, loadCharacters]);
 
-  function loadSessions() {
+  async function loadSessions() {
     try {
-      const savedSessions = localStorage.getItem("think-speak-sessions");
-      if (savedSessions) {
-        const parsedSessions = JSON.parse(savedSessions);
-        // 按更新时间排序，最新的在前
-        const sortedSessions = parsedSessions.sort((a: Session, b: Session) => b.updatedAt - a.updatedAt);
-        setSessions(sortedSessions);
+      setLoading(true);
+      setError(null);
+      const response = await chatApi.getConversationHistory();
+      if (response.code === 0) {
+        setSessions(response.data);
+      } else {
+        setError(response.message || '获取会话历史失败');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to load sessions:", error);
+      setError(error?.message || '获取会话历史失败');
     } finally {
       setLoading(false);
     }
@@ -68,27 +55,26 @@ export default function SessionsPage() {
 
   function deleteSession(sessionId: string) {
     if (confirm("确定要删除这个会话吗？")) {
+      // TODO: 调用删除会话API
       const updatedSessions = sessions.filter(s => s.id !== sessionId);
       setSessions(updatedSessions);
-      localStorage.setItem("think-speak-sessions", JSON.stringify(updatedSessions));
     }
   }
 
   function clearAllSessions() {
     if (confirm("确定要清空所有会话历史吗？此操作不可恢复。")) {
+      // TODO: 调用清空会话API
       setSessions([]);
-      localStorage.removeItem("think-speak-sessions");
     }
   }
 
-  function continueSession(session: Session) {
-    // 保存会话数据到临时存储，聊天页面会读取
-    localStorage.setItem("continue-session", JSON.stringify(session));
+  function continueSession(session: ConversationHistoryItem) {
     router.push(`/chat/${session.characterId}?session=${session.id}`);
   }
 
-  function formatTime(timestamp: number) {
-    const date = new Date(timestamp);
+  function formatTime(timestamp: number[]) {
+    if (!timestamp || timestamp.length < 2) return "未知时间";
+    const date = new Date(timestamp[0], timestamp[1] - 1, timestamp[2] || 1);
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     
@@ -104,12 +90,16 @@ export default function SessionsPage() {
     }
   }
 
-  function formatDuration(minutes: number) {
-    if (minutes < 1) return "< 1分钟";
-    if (minutes < 60) return `${minutes}分钟`;
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    return `${hours}小时${remainingMinutes > 0 ? remainingMinutes + "分钟" : ""}`;
+  function getMessageCount(session: ConversationHistoryItem) {
+    return session.messages?.length || 0;
+  }
+
+  function getLastMessage(session: ConversationHistoryItem) {
+    if (!session.messages || session.messages.length === 0) {
+      return "暂无消息";
+    }
+    const lastMsg = session.messages[session.messages.length - 1];
+    return lastMsg.content || "暂无消息";
   }
 
   if (loading) {
@@ -166,7 +156,20 @@ export default function SessionsPage() {
           )}
         </header>
 
-        {sessions.length === 0 ? (
+        {error ? (
+          <div className="text-center py-16">
+            <div className="mb-6">
+              <div className="text-lg font-semibold text-red-400 mb-2">加载失败</div>
+              <div className="text-sm text-white/60 mb-6">{error}</div>
+            </div>
+            <button
+              onClick={loadSessions}
+              className="inline-block px-6 py-2 border-2 border-white/40 rounded-none bg-transparent text-white hover:border-white/60 hover:bg-white/10 transition-colors shadow-[4px_4px_0_0_#ffffff20]"
+            >
+              重试
+            </button>
+          </div>
+        ) : sessions.length === 0 ? (
           <div className="text-center py-16">
             <div className="mb-6">
               <div className="flex justify-center mb-4">
@@ -221,23 +224,28 @@ export default function SessionsPage() {
                               variant="outline"
                               className="rounded-none border-2 border-white/30 text-white text-xs"
                             >
-                              {session.messageCount} 条消息
+                              {getMessageCount(session)} 条消息
                             </Badge>
-                            <Badge
-                              variant="outline"
-                              className="rounded-none border-2 border-white/30 text-white text-xs"
-                            >
-                              {formatDuration(session.duration)}
-                            </Badge>
+                            {session.title && (
+                              <Badge
+                                variant="outline"
+                                className="rounded-none border-2 border-white/30 text-white text-xs"
+                              >
+                                {session.title}
+                              </Badge>
+                            )}
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="text-xs text-white/60">
-                          {formatTime(session.updatedAt)}
+                          {session.messages && session.messages.length > 0 
+                            ? formatTime(session.messages[session.messages.length - 1].createdAt)
+                            : "未知时间"
+                          }
                         </div>
                         <div className="text-xs text-white/40 mt-1">
-                          {new Date(session.createdAt).toLocaleDateString("zh-CN")}
+                          ID: {session.id.slice(-8)}
                         </div>
                       </div>
                     </div>
@@ -245,7 +253,7 @@ export default function SessionsPage() {
                   <CardContent className="px-5 pb-5">
                     <div className="mb-4">
                       <div className="text-sm text-white/80 line-clamp-2">
-                        {session.lastMessage}
+                        {getLastMessage(session)}
                       </div>
                     </div>
                     <div className="flex gap-2 justify-end">
@@ -279,15 +287,15 @@ export default function SessionsPage() {
               </div>
               <div className="text-center p-3 border border-white/20 rounded-none">
                 <div className="text-2xl font-bold text-white">
-                  {sessions.reduce((sum, s) => sum + s.messageCount, 0)}
+                  {sessions.reduce((sum, s) => sum + getMessageCount(s), 0)}
                 </div>
                 <div className="text-sm text-white/60">总消息数</div>
               </div>
               <div className="text-center p-3 border border-white/20 rounded-none">
                 <div className="text-2xl font-bold text-white">
-                  {formatDuration(sessions.reduce((sum, s) => sum + s.duration, 0))}
+                  {sessions.filter(s => s.title).length}
                 </div>
-                <div className="text-sm text-white/60">总时长</div>
+                <div className="text-sm text-white/60">有标题会话</div>
               </div>
               <div className="text-center p-3 border border-white/20 rounded-none">
                 <div className="text-2xl font-bold text-white">

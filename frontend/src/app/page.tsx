@@ -67,9 +67,6 @@ export default function Home() {
             <Link href="/sessions" className="text-sm text-white/70 hover:text-white">
               会话历史
             </Link>
-            <Link href="/settings" className="text-sm text-white/70 hover:text-white">
-              Settings
-            </Link>
         <div className="flex items-center gap-2 ml-4">
           {user ? (
             <div className="flex items-center gap-3">

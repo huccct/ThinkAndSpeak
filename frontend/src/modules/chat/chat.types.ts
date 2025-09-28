@@ -12,7 +12,6 @@ export type CreateConversationResponse = {
 
 export type SendMessageRequest = {
   text: string;
-  persona: string;
 };
 
 export type SendMessageResponse = {
@@ -40,6 +39,19 @@ export type GetConversationResponse = {
     characterId: string;
     messages: ConversationMessage[];
   };
+};
+
+export type ConversationHistoryItem = {
+  id: string;
+  characterId: string;
+  title: string | null;
+  messages: ConversationMessage[] | null;
+};
+
+export type GetConversationHistoryResponse = {
+  code: number;
+  message: string;
+  data: ConversationHistoryItem[];
 };
 
 

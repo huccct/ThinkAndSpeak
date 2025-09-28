@@ -240,7 +240,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       if (!currentConversationId) {
         throw new Error('会话ID不可用');
       }
-      const reply = await sendMessage(currentConversationId, messageText, ch.name);
+      const reply = await sendMessage(currentConversationId, messageText);
       const assistantMsg: Msg = {
         role: "assistant",
         content: reply,
@@ -299,9 +299,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
               </p>
             </div>
           </div>
-          <Link href="/settings" className="text-sm text-white/70 hover:text-white transition-colors">
-            Settings
-          </Link>
         </header>
 
         <div className="mb-6 p-4 border-2 border-white/20 rounded-none bg-transparent">
