@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import xyz.mushan.backend.common.base.ApiResponse;
+import xyz.mushan.backend.common.util.IdConverter;
 import xyz.mushan.backend.modules.chat.dto.CharacterDto;
 import xyz.mushan.backend.modules.chat.dto.vo.CharacterCreateVo;
 import xyz.mushan.backend.modules.chat.entity.CharacterEntity;
@@ -43,8 +44,8 @@ public class CharacterController {
      */
     @GetMapping("/{id}")
     @Operation(summary = "根据ID获取角色详情", description = "根据角色ID获取角色详细信息")
-    public ApiResponse<CharacterDto> get(@PathVariable Long id) {
-        return ApiResponse.success(characterService.getCharacterById(id));
+    public ApiResponse<CharacterDto> get(@PathVariable String id) {
+        return ApiResponse.success(characterService.getCharacterById(IdConverter.parse(id)));
     }
 
     /**
