@@ -108,6 +108,8 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html")
                         .permitAll()
+                        // 放行 WebSocket 路径
+                        .requestMatchers("/ws/**").permitAll()
                         // 允许所有OPTIONS请求
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // 允许登录和注册接口无需认证

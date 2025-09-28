@@ -11,6 +11,7 @@ import xyz.mushan.backend.modules.llm.adapter.LLMAdapter;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * OpenAI ChatGPT 适配器
@@ -54,5 +55,10 @@ public class OpenAIChatGPTAdapter implements LLMAdapter {
             }
         }
         return "[OpenAI ChatGPT] 无返回内容";
+    }
+
+    @Override
+    public void generateStream(String prompt, Consumer<String> onChunk, Consumer<Throwable> onError, Runnable onComplete) throws Exception {
+
     }
 }

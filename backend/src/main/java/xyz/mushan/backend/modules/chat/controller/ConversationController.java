@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import xyz.mushan.backend.common.util.IdConverter;
 import xyz.mushan.backend.common.base.ApiResponse;
 import xyz.mushan.backend.modules.chat.dto.ConversationDto;
@@ -21,12 +22,13 @@ import xyz.mushan.backend.modules.chat.dto.response.CreateConversationResponse;
 import xyz.mushan.backend.modules.chat.dto.response.SendMessageResponse;
 import xyz.mushan.backend.modules.llm.adapter.enums.LLMProvider;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
 /**
  * @author mushan
- *         会话控制器，处理会话相关的HTTP请求
+ * 会话控制器，处理会话相关的HTTP请求
  */
 @RestController
 @RequestMapping("/api/chat/conversations")
@@ -65,6 +67,19 @@ public class ConversationController {
     }
 
     /**
+     * 用户历史会话
+     *
+     * @param userId 用户ID
+     * @return 会话数据传输对象数组
+     */
+    @GetMapping("/history/{userId}")
+    @Operation(summary = "用户历史会话", description = "获取指定用户的历史会话")
+    public ApiResponse<List<ConversationDto>> getHistory(
+            @Parameter(description = "用户ID") @PathVariable("userId") String userId) {
+        return ApiResponse.success(conversationService.getHistory(userId));
+    }
+
+    /**
      * 发送消息到会话
      *
      * @param id   会话ID
@@ -93,14 +108,31 @@ public class ConversationController {
     }
 
     /**
-     * 用户历史会话
-     * @param userId 用户ID
-     * @return 会话数据传输对象数组
+     * 流式聊天接口
+     * 使用SSE实现实时回复
      */
-    @GetMapping("/history/{userId}")
-    @Operation(summary = "用户历史会话", description = "获取指定用户的历史会话")
-    public ApiResponse<List<ConversationDto>> getHistory(
-            @Parameter(description = "用户ID") @PathVariable("userId") String userId) {
-        return ApiResponse.success(conversationService.getHistory(userId));
+    @GetMapping("/{id}/stream_message")
+    public SseEmitter streamChat(@PathVariable("id") String id,
+                                 @RequestParam String message,
+                                 @RequestParam(required = false) String persona,
+                                 @RequestParam(required = false) String history,
+                                 @RequestParam(defaultValue = "OLLAMA") LLMProvider provider) {
+        // 设置超时时间
+        SseEmitter emitter = new SseEmitter(1000L);
+
+        // 调用流式生成方法
+        chatService.generateReplyStream(persona, history, message, provider,
+                chunk -> {
+                    try {
+                        emitter.send(chunk);
+                    } catch (IOException e) {
+                        emitter.completeWithError(e);
+                    }
+                },
+                emitter::completeWithError,
+                emitter::complete
+        );
+
+        return emitter;
     }
 }
