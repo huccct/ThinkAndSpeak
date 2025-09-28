@@ -1,5 +1,5 @@
 export type CreateConversationRequest = {
-  characterId: number;
+  characterId: string;
 };
 
 export type CreateConversationResponse = {

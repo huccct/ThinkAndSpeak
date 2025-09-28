@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -59,7 +58,7 @@ public class ConversationController {
             @RequestBody
             CreateConversationRequest body) {
         LoginUser loginUser = SecurityUtil.getCurrentUser();
-        ConversationEntity conv = conversationService.createConversation(body.getCharacterId(), loginUser.getUserId());
+        ConversationEntity conv = conversationService.createConversation(IdConverter.parse(body.getCharacterId()), loginUser.getUserId());
         return ApiResponse.success(new CreateConversationResponse(conv.getId().toString()));
     }
 

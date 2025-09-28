@@ -11,5 +11,5 @@ import lombok.Data;
 @Data
 public class CreateConversationRequest {
     // 角色ID, Long字符串
-    private Long characterId;
+    private String characterId;
 }

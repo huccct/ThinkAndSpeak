@@ -26,7 +26,7 @@ export const useChatStore = create<ChatState & ChatActions>((set, get) => ({
   createConversation: async (characterId: string) => {
     set({ loading: true, error: undefined });
     try {
-      const res = await chatApi.createConversation({ characterId: parseInt(characterId) });
+      const res = await chatApi.createConversation({ characterId: characterId });
       if (res.code !== 0) throw new Error(res.message || 'create conversation failed');
       
       const conversationId = res.data.conversationId;
