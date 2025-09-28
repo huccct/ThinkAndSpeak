@@ -10,7 +10,7 @@ type ChatState = {
 
 type ChatActions = {
   createConversation: (characterId: string) => Promise<string>;
-  sendMessage: (conversationId: string, text: string, persona: string) => Promise<string>;
+  sendMessage: (conversationId: string, text: string) => Promise<string>;
   getConversation: (conversationId: string) => Promise<ConversationMessage[]>;
   getExistingConversationId: (characterId: string) => string | null;
   saveConversationId: (characterId: string, conversationId: string) => void;
@@ -49,10 +49,10 @@ export const useChatStore = create<ChatState & ChatActions>((set, get) => ({
     }
   },
 
-  sendMessage: async (conversationId: string, text: string, persona: string) => {
+  sendMessage: async (conversationId: string, text: string) => {
     set({ loading: true, error: undefined });
     try {
-      const payload: SendMessageRequest = { text, persona };
+      const payload: SendMessageRequest = { text };
       const res = await chatApi.sendMessage(conversationId, payload);
       if (res.code !== 0) throw new Error(res.message || 'send message failed');
       return res.data.reply;

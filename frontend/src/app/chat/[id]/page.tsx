@@ -2,9 +2,8 @@
 
 import { useEffect, useMemo, useState, use, useRef, useCallback } from "react";
 import Link from "next/link";
-import { SkillToggle } from "@/lib/skills";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
+import SkillsSettings from "@/components/SkillsSettings";
 import { ArrowLeft } from "lucide-react";
 import {
   useCharacters,
@@ -19,6 +18,7 @@ import { useTTS } from "@/hooks/useTTS";
 import { useASR } from "@/hooks/useASR";
 import { TTSPlayButton } from "@/components/TTSPlayButton";
 import { VoiceRecordButton } from "@/components/VoiceRecordButton";
+import { useSkills } from "@/modules/settings/settings.store";
 
 type Msg = { role: "user" | "assistant"; content: string; timestamp?: number };
 
@@ -60,12 +60,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     clearError: clearASRError
   } = useASR();
 
-  const [skills, setSkills] = useState<SkillToggle>({
-    socratic: resolvedParams.id === "socrates",
-    quotes: true,
-    flashcards: true,
-    memory: true,
-  });
+  const skills = useSkills();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -81,6 +76,33 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       load();
     }
   }, [list.length, load, token]);
+
+  // 处理ASR结果
+  useEffect(() => {
+    if (asrResult?.text) {
+      setInput(asrResult.text);
+      clearASRResult();
+    }
+  }, [asrResult, clearASRResult]);
+
+  // 处理TTS错误
+  useEffect(() => {
+    if (ttsError) {
+      console.error('TTS错误:', ttsError);
+    }
+  }, [ttsError]);
+
+  // 处理ASR错误
+  useEffect(() => {
+    if (asrError) {
+      console.error('ASR错误:', asrError);
+    }
+  }, [asrError]);
+
+  // 滚动到底部
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   // 如果角色未找到且正在加载，显示加载状态
   if (loading && !ch) {
@@ -192,17 +214,6 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  // 处理ASR结果
-  useEffect(() => {
-    if (asrResult?.text) {
-      setInput(asrResult.text);
-      clearASRResult();
-    }
-  }, [asrResult, clearASRResult]);
 
 
   async function handleSendText() {
@@ -240,7 +251,10 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       if (!currentConversationId) {
         throw new Error('会话ID不可用');
       }
-      const reply = await sendMessage(currentConversationId, messageText, ch.name);
+      
+      // 在消息中包含技能设置信息
+      const enhancedMessage = `${messageText}\n\n[技能设置: ${JSON.stringify(skills)}]`;
+      const reply = await sendMessage(currentConversationId, enhancedMessage);
       const assistantMsg: Msg = {
         role: "assistant",
         content: reply,
@@ -299,48 +313,9 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
               </p>
             </div>
           </div>
-          <Link href="/settings" className="text-sm text-white/70 hover:text-white transition-colors">
-            Settings
-          </Link>
         </header>
 
-        <div className="mb-6 p-4 border-2 border-white/20 rounded-none bg-transparent">
-          <div className="text-sm font-medium uppercase tracking-wide mb-3">技能开关</div>
-          <div className="flex flex-wrap gap-4">
-            <label className="flex items-center gap-2 text-sm">
-              <Checkbox
-                checked={skills.socratic}
-                onCheckedChange={(checked) => setSkills({ ...skills, socratic: !!checked })}
-                className="rounded-none border-2 border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-black"
-              />
-              Socratic 追问
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <Checkbox
-                checked={skills.quotes}
-                onCheckedChange={(checked) => setSkills({ ...skills, quotes: !!checked })}
-                className="rounded-none border-2 border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-black"
-              />
-              金句提炼
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <Checkbox
-                checked={skills.flashcards}
-                onCheckedChange={(checked) => setSkills({ ...skills, flashcards: !!checked })}
-                className="rounded-none border-2 border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-black"
-              />
-              学习卡片
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <Checkbox
-                checked={skills.memory}
-                onCheckedChange={(checked) => setSkills({ ...skills, memory: !!checked })}
-                className="rounded-none border-2 border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-black"
-              />
-              会话记忆
-            </label>
-          </div>
-        </div>
+        <SkillsSettings className="mb-6" />
 
         <div className="flex-1 min-h-0 mb-6">
           <div className="space-y-4 max-h-96 overflow-y-auto pr-2 scrollbar-pixel">
