@@ -18,6 +18,7 @@ import { useChatCreateConversation, useChatGetExistingConversationId, useChatSav
 import { useAuthToken, useAuthUser, useAuthLogout, useAuthInitializeAuth } from "@/modules/auth/auth.store";
 import { UserAvatar } from "@/components/UserAvatar";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function Home() {
   const router = useRouter();
@@ -77,8 +78,14 @@ export default function Home() {
               <button
                 onClick={() => {
                   logout();
-                  // 退出登录后刷新页面以立即更新状态
-                  window.location.reload();
+                  toast.success("已退出登录", {
+                    description: "感谢使用 Think·Speak",
+                    duration: 2000,
+                  });
+                  // 延迟刷新页面，让用户看到退出提示
+                  setTimeout(() => {
+                    window.location.reload();
+                  }, 1000);
                 }}
                 className="px-3 py-1 border-2 border-white/40 rounded-none bg-transparent text-white hover:border-white/60 hover:bg-white/10 transition-colors shadow-[2px_2px_0_0_#ffffff20] text-sm cursor-pointer"
               >

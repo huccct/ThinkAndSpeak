@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { useAuthLogin, useAuthLoading, useAuthError } from "@/modules/auth/auth.store";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -14,7 +15,6 @@ export default function LoginPage() {
     password: "",
   });
   const [localError, setLocalError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
   
   const login = useAuthLogin();
   const loading = useAuthLoading();
@@ -25,7 +25,10 @@ export default function LoginPage() {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('registered') === 'true') {
-        setSuccessMessage("注册成功！请使用您的账户登录。");
+        toast.success("注册成功！", {
+          description: "请使用您的账户登录",
+          duration: 4000,
+        });
       }
     }
   }, []);
@@ -47,9 +50,21 @@ export default function LoginPage() {
     try {
       await login(formData.username, formData.password);
       
-      window.location.href = "/";
+      toast.success("登录成功！", {
+        description: "欢迎回来",
+        duration: 2000,
+      });
+      
+      // 延迟跳转，让用户看到成功提示
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 1000);
     } catch (error) {
       console.error("登录失败:", error);
+      toast.error("登录失败", {
+        description: apiError || "请检查用户名和密码",
+        duration: 4000,
+      });
     }
   };
 
@@ -90,15 +105,9 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="px-6 pb-6">
-            {successMessage && (
-              <div className="mb-4 p-3 border-2 border-green-400 bg-green-400/10 rounded-none text-green-400 text-sm">
-                {successMessage}
-              </div>
-            )}
-            
-            {(localError || apiError) && (
+            {localError && (
               <div className="mb-4 p-3 border-2 border-red-400 bg-red-400/10 rounded-none text-red-400 text-sm">
-                {localError || apiError}
+                {localError}
               </div>
             )}
             

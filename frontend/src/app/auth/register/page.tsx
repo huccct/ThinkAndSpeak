@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { useAuthRegister, useAuthLoading, useAuthError } from "@/modules/auth/auth.store";
+import { toast } from "sonner";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -37,9 +38,21 @@ export default function RegisterPage() {
     try {
       await register(formData.username, formData.password);
       
-      window.location.href = "/auth/login?registered=true";
+      toast.success("注册成功！", {
+        description: "正在跳转到登录页面...",
+        duration: 2000,
+      });
+      
+      // 延迟跳转，让用户看到成功提示
+      setTimeout(() => {
+        window.location.href = "/auth/login?registered=true";
+      }, 1000);
     } catch (error) {
       console.error("注册失败:", error);
+      toast.error("注册失败", {
+        description: apiError || "请检查输入信息",
+        duration: 4000,
+      });
     }
   };
 
@@ -80,9 +93,9 @@ export default function RegisterPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="px-6 pb-6">
-            {(localError || apiError) && (
+            {localError && (
               <div className="mb-4 p-3 border-2 border-red-400 bg-red-400/10 rounded-none text-red-400 text-sm">
-                {localError || apiError}
+                {localError}
               </div>
             )}
             
