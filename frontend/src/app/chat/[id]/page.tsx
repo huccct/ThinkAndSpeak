@@ -5,7 +5,7 @@ import Link from "next/link";
 import { SkillToggle } from "@/lib/skills";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Mic, Square, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import {
   useCharacters,
   useCharactersLoad,
@@ -13,6 +13,9 @@ import {
 import { useChatSendMessage, useChatGetConversation } from "@/modules/chat/chat.store";
 import { useAuthToken, useAuthUser, useAuthInitializeAuth } from "@/modules/auth/auth.store";
 import { UserAvatar } from "@/components/UserAvatar";
+import { useASR } from "@/hooks/useASR";
+import { RecordingFeedback } from "@/components/RecordingFeedback";
+import { VoiceRecordButton } from "@/components/VoiceRecordButton";
 
 type Msg = { role: "user" | "assistant"; content: string; timestamp?: number };
 
@@ -27,6 +30,18 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const token = useAuthToken();
   const user = useAuthUser();
   const initializeAuth = useAuthInitializeAuth();
+  
+  // ASR功能
+  const { 
+    isRecording, 
+    isProcessing, 
+    result: asrResult, 
+    error: asrError, 
+    startRecording, 
+    stopRecording, 
+    clearResult: clearASRResult,
+    clearError: clearASRError 
+  } = useASR();
 
   const [skills, setSkills] = useState<SkillToggle>({
     socratic: resolvedParams.id === "socrates",
@@ -36,13 +51,11 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   });
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
-  const [recording, setRecording] = useState(false);
   const [sending, setSending] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // 初始化认证状态
     initializeAuth();
   }, [initializeAuth]);
 
@@ -115,6 +128,22 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     scrollToBottom();
   }, [messages]);
 
+  // 处理ASR识别结果
+  useEffect(() => {
+    if (asrResult?.text) {
+      setInput(asrResult.text);
+      clearASRResult();
+    }
+  }, [asrResult, clearASRResult]);
+
+  // 处理ASR错误
+  useEffect(() => {
+    if (asrError) {
+      console.error('ASR错误:', asrError);
+      // 可以显示错误提示给用户
+    }
+  }, [asrError]);
+
   async function handleSendText() {
     if (!input.trim() || sending || !ch) return;
     
@@ -170,26 +199,21 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     }
   }
 
-  function handleVoiceRecord() {
-    if (recording) {
-      setRecording(false);
-      // TODO: 停止录音并发送 ASR
-    } else {
-      setRecording(true);
-      // TODO: 开始录音
-    }
-  }
 
 
   return (
-    <div
-      className="min-h-screen bg-black text-white font-mono"
-      style={{
-        backgroundImage:
-          "repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 16px), repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 16px)",
-        imageRendering: "pixelated",
-      }}
-    >
+    <>
+      {/* 录音反馈组件 */}
+      <RecordingFeedback isRecording={isRecording} />
+      
+      <div
+        className="min-h-screen bg-black text-white font-mono"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 16px), repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 16px)",
+          imageRendering: "pixelated",
+        }}
+      >
       <div className="mx-auto w-full max-w-4xl px-6 py-6">
         <header className="flex items-center justify-between border-b-2 border-white/30 pb-4 mb-6">
           <div className="flex items-center gap-4">
@@ -343,22 +367,28 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
             >
               发送
             </button>
-            <button
-              onClick={handleVoiceRecord}
-              className={`px-4 py-2 border-2 rounded-none bg-transparent text-white transition-colors shadow-[4px_4px_0_0_#ffffff20] ${
-                recording
-                  ? "border-red-400 bg-red-400/10"
-                  : "border-white/40 hover:border-white/60 hover:bg-white/10"
-              }`}
-            >
-              {recording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-            </button>
+            <VoiceRecordButton
+              isRecording={isRecording}
+              isProcessing={isProcessing}
+              onStart={startRecording}
+              onStop={stopRecording}
+              disabled={sending}
+              className="transition-transform hover:scale-105"
+            />
           </div>
-          <div className="mt-2 text-xs text-white/40">
-            {recording ? "录音中..." : "按麦克风开始语音输入"}
-          </div>
+          {isProcessing && (
+            <div className="mt-2 text-xs text-white/40">
+              正在识别语音...
+            </div>
+          )}
+          {asrError && (
+            <div className="mt-2 text-xs text-red-400">
+              语音识别失败: {asrError}
+            </div>
+          )}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
