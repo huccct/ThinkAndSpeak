@@ -6,6 +6,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import xyz.mushan.backend.modules.auth.dto.LoginUser;
 import xyz.mushan.backend.modules.auth.entity.UserEntity;
 import xyz.mushan.backend.modules.auth.repository.UserRepository;
 
@@ -23,8 +24,9 @@ public class CustomUserDetailsService implements UserDetailsService {
         UserEntity user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("用户不存在"));
 
-        return User
-                .withUsername(user.getUsername())
+        return LoginUser.builder()
+                .userId(user.getId())
+                .username(user.getUsername())
                 .password(user.getPassword())
                 .roles("USER")
                 .build();

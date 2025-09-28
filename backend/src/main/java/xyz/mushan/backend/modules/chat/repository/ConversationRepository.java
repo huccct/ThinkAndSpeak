@@ -14,5 +14,5 @@ public interface ConversationRepository extends JpaRepository<ConversationEntity
      * @param userId 用户ID
      * @return 会话列表
      */
-    List<ConversationEntity> findByUserId(String userId);
+    List<ConversationEntity> findByUserId(Long userId);
 }

@@ -36,7 +36,7 @@ public class ConversationEntity implements Serializable {
     /**
      * 用户ID
      */
-    private String userId;
+    private Long userId;
 
     /**
      * 标题
