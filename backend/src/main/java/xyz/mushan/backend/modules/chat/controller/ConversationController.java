@@ -12,9 +12,11 @@ import xyz.mushan.backend.common.util.IdConverter;
 import xyz.mushan.backend.common.base.ApiResponse;
 import xyz.mushan.backend.modules.auth.dto.LoginUser;
 import xyz.mushan.backend.modules.auth.utils.SecurityUtil;
+import xyz.mushan.backend.modules.chat.dto.CharacterDto;
 import xyz.mushan.backend.modules.chat.dto.ConversationDto;
 import xyz.mushan.backend.modules.chat.dto.MessageDto;
 import xyz.mushan.backend.modules.chat.entity.ConversationEntity;
+import xyz.mushan.backend.modules.chat.service.CharacterService;
 import xyz.mushan.backend.modules.chat.service.ChatService;
 import xyz.mushan.backend.modules.chat.service.ConversationService;
 
@@ -27,6 +29,7 @@ import xyz.mushan.backend.modules.llm.adapter.enums.LLMProvider;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -38,6 +41,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Tag(name = "Conversation API", description = "会话相关接口")
 public class ConversationController {
+    private final CharacterService characterService;
     private final ConversationService conversationService;
     private final ChatService chatService;
 
@@ -81,7 +85,7 @@ public class ConversationController {
     @Operation(summary = "用户历史会话", description = "获取当前用户的历史会话")
     public ApiResponse<List<ConversationDto>> getHistory() {
         LoginUser loginUser = SecurityUtil.getCurrentUser();
-        return ApiResponse.success(conversationService.getHistory(loginUser.getUserId()));
+        return ApiResponse.success(conversationService.getHistory(Objects.requireNonNull(loginUser).getUserId()));
     }
 
     /**
@@ -97,11 +101,12 @@ public class ConversationController {
             @Parameter(description = "会话ID") @PathVariable("id") String id,
             @Parameter(description = "请求体，包含text和persona") @RequestBody SendMessageRequest body) {
         String text = Optional.ofNullable(body.getText()).orElse("");
-        String persona = Optional.ofNullable(body.getPersona()).orElse("");
         // 保存用户消息
         conversationService.appendMessage(IdConverter.parse(id), "USER", text, null);
         // 读取历史（简化：按 conversation 全部消息）
         ConversationDto conversation = conversationService.getConversation(IdConverter.parse(id));
+        CharacterDto character = characterService.getCharacterById(conversation.characterId());
+        String persona = Optional.ofNullable(character.persona()).orElse("");
         StringBuilder historySb = new StringBuilder();
         conversation.messages()
                 .forEach(m -> historySb.append(m.sender()).append(": ").append(m.content()).append("\n"));
