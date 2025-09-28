@@ -11,7 +11,7 @@ import {
   useCharactersLoading,
   useCharactersError 
 } from "@/modules/characters/characters.store";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, MessageCircle } from "lucide-react";
 
 type SessionMessage = {
   role: "user" | "assistant";
@@ -159,7 +159,7 @@ export default function SessionsPage() {
           {sessions.length > 0 && (
             <button
               onClick={clearAllSessions}
-              className="px-3 py-1 border border-white/30 rounded-none bg-transparent text-white/70 hover:border-white/50 hover:text-white transition-colors text-sm"
+              className="cursor-pointer px-3 py-1 border border-white/30 rounded-none bg-transparent text-white/70 hover:border-white/50 hover:text-white transition-colors text-sm"
             >
               清空全部
             </button>
@@ -169,7 +169,9 @@ export default function SessionsPage() {
         {sessions.length === 0 ? (
           <div className="text-center py-16">
             <div className="mb-6">
-              <div className="text-4xl mb-4">💬</div>
+              <div className="flex justify-center mb-4">
+                <MessageCircle className="w-16 h-16 text-white/40" />
+              </div>
               <div className="text-lg font-semibold text-white mb-2">暂无会话记录</div>
               <div className="text-sm text-white/60 mb-6">
                 开始与角色对话后，会话记录将显示在这里
@@ -249,13 +251,13 @@ export default function SessionsPage() {
                     <div className="flex gap-2 justify-end">
                       <button
                         onClick={() => deleteSession(session.id)}
-                        className="px-3 py-1 border border-white/30 rounded-none bg-transparent text-white/60 hover:border-red-400/50 hover:text-red-400 transition-colors text-sm"
+                        className="cursor-pointer px-3 py-1 border border-white/30 rounded-none bg-transparent text-white/60 hover:border-red-400/50 hover:text-red-400 transition-colors text-sm"
                       >
                         删除
                       </button>
                       <button
                         onClick={() => continueSession(session)}
-                        className="px-4 py-2 border-2 border-white/40 rounded-none bg-transparent text-white hover:border-white/60 hover:bg-white/10 transition-colors shadow-[3px_3px_0_0_#ffffff20]"
+                        className="cursor-pointer px-4 py-2 border-2 border-white/40 rounded-none bg-transparent text-white hover:border-white/60 hover:bg-white/10 transition-colors shadow-[3px_3px_0_0_#ffffff20]"
                       >
                         继续对话
                       </button>

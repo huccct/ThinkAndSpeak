@@ -159,13 +159,13 @@ export default function CharacterDetailPage({ params }: { params: Promise<{ id: 
           <div className="text-red-400 mb-4">加载失败: {error}</div>
           <button
             onClick={() => loadCharacters()}
-            className="px-4 py-2 border-2 border-white/30 rounded-none bg-transparent text-white hover:border-white/50 hover:bg-white/10 transition-colors mr-4"
+            className="cursor-pointer px-4 py-2 border-2 border-white/30 rounded-none bg-transparent text-white hover:border-white/50 hover:bg-white/10 transition-colors mr-4"
           >
             重试
           </button>
           <Link
             href="/characters"
-            className="px-4 py-2 border-2 border-white/30 rounded-none bg-transparent text-white hover:border-white/50 hover:bg-white/10 transition-colors"
+            className="cursor-pointer px-4 py-2 border-2 border-white/30 rounded-none bg-transparent text-white hover:border-white/50 hover:bg-white/10 transition-colors"
           >
             返回角色列表
           </Link>
@@ -355,15 +355,15 @@ export default function CharacterDetailPage({ params }: { params: Promise<{ id: 
         <div className="flex gap-4 justify-center">
           <button
             onClick={() => router.push("/characters")}
-            className="px-6 py-2 border-2 border-white/40 rounded-none bg-transparent text-white hover:border-white/60 hover:bg-white/10 transition-colors shadow-[4px_4px_0_0_#ffffff20]"
+            className="cursor-pointer px-6 py-2 border-2 border-white/40 rounded-none bg-transparent text-white hover:border-white/60 hover:bg-white/10 transition-colors shadow-[4px_4px_0_0_#ffffff20]"
           >
             返回角色库
           </button>
           <button
             onClick={handleStartChat}
-            className="px-8 py-2 border-2 border-white/40 rounded-none bg-transparent text-white hover:border-white/60 hover:bg-white/10 transition-colors shadow-[4px_4px_0_0_#ffffff20] font-medium"
+            className="cursor-pointer px-8 py-2 border-2 border-white/40 rounded-none bg-transparent text-white hover:border-white/60 hover:bg-white/10 transition-colors shadow-[4px_4px_0_0_#ffffff20] font-medium"
           >
-            开始对话 →
+            开始对话
           </button>
         </div>
       </div>

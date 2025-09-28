@@ -151,13 +151,13 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
           <div className="text-red-400 mb-4">加载失败: {error}</div>
           <button
             onClick={() => load()}
-            className="px-4 py-2 border-2 border-white/30 rounded-none bg-transparent text-white hover:border-white/50 hover:bg-white/10 transition-colors mr-4"
+            className="cursor-pointer px-4 py-2 border-2 border-white/30 rounded-none bg-transparent text-white hover:border-white/50 hover:bg-white/10 transition-colors mr-4"
           >
             重试
           </button>
           <Link
             href="/characters"
-            className="px-4 py-2 border-2 border-white/30 rounded-none bg-transparent text-white hover:border-white/50 hover:bg-white/10 transition-colors"
+            className="cursor-pointer px-4 py-2 border-2 border-white/30 rounded-none bg-transparent text-white hover:border-white/50 hover:bg-white/10 transition-colors"
           >
             返回角色列表
           </Link>
@@ -425,7 +425,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                         onPlay={(text) => speak(text)}
                         onStop={stopTTS}
                         size="sm"
-                        className="flex-shrink-0 mt-1"
+                        className="cursor-pointer flex-shrink-0 mt-1"
                       />
                     )}
                   </div>
@@ -463,7 +463,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
             <button
               onClick={toggleVoiceMode}
               disabled={!conversationId || !ch}
-              className={`px-4 py-2 border-2 rounded-none transition-all duration-200 shadow-[4px_4px_0_0_#ffffff20] disabled:opacity-50 disabled:cursor-not-allowed ${
+              className={`cursor-pointer px-4 py-2 border-2 rounded-none transition-all duration-200 shadow-[4px_4px_0_0_#ffffff20] disabled:opacity-50 disabled:cursor-not-allowed ${
                 voiceMode 
                   ? 'border-green-400 bg-green-400/20 text-green-400' 
                   : 'border-white/40 bg-transparent text-white hover:border-white/60 hover:bg-white/10'
@@ -537,7 +537,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
               <button
                 onClick={handleSendText}
                 disabled={!input.trim() || sending}
-                className="px-4 py-2 border-2 border-white/40 rounded-none bg-transparent text-white hover:border-white/60 hover:bg-white/10 transition-colors shadow-[4px_4px_0_0_#ffffff20] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="cursor-pointer px-4 py-2 border-2 border-white/40 rounded-none bg-transparent text-white hover:border-white/60 hover:bg-white/10 transition-colors shadow-[4px_4px_0_0_#ffffff20] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 发送
               </button>

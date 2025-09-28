@@ -138,7 +138,7 @@ export default function RegisterPage() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-none border-2 border-white bg-white text-black hover:bg-white/90 transition-colors shadow-[4px_4px_0_0_#ffffff20] disabled:opacity-50"
+                className="cursor-pointer w-full rounded-none border-2 border-white bg-white text-black hover:bg-white/90 transition-colors shadow-[4px_4px_0_0_#ffffff20] disabled:opacity-50"
               >
                 {loading ? "注册中..." : "注册"}
               </Button>
