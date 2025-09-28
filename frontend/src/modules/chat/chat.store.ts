@@ -15,6 +15,7 @@ type ChatActions = {
   getExistingConversationId: (characterId: string) => string | null;
   saveConversationId: (characterId: string, conversationId: string) => void;
   clearError: () => void;
+  clearAllConversations: () => void;
 };
 
 export const useChatStore = create<ChatState & ChatActions>((set, get) => ({
@@ -93,6 +94,20 @@ export const useChatStore = create<ChatState & ChatActions>((set, get) => ({
   clearError: () => {
     set({ error: undefined });
   },
+
+  clearAllConversations: () => {
+    // 清除localStorage中的所有会话
+    if (typeof window !== 'undefined') {
+      const keys = Object.keys(localStorage);
+      keys.forEach(key => {
+        if (key.startsWith('conversation_')) {
+          localStorage.removeItem(key);
+        }
+      });
+    }
+    // 清除store中的会话状态
+    set({ conversations: {} });
+  },
 }));
 
 // selectors
@@ -106,3 +121,4 @@ export const useChatGetConversation = () => useChatStore(s => s.getConversation)
 export const useChatGetExistingConversationId = () => useChatStore(s => s.getExistingConversationId);
 export const useChatSaveConversationId = () => useChatStore(s => s.saveConversationId);
 export const useChatClearError = () => useChatStore(s => s.clearError);
+export const useChatClearAllConversations = () => useChatStore(s => s.clearAllConversations);

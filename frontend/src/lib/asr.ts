@@ -96,12 +96,83 @@ class ASRService {
   }
 
   /**
+   * 转换音频格式为支持的格式
+   */
+  private async convertAudioFormat(audioBlob: Blob): Promise<Blob> {
+    try {
+      // 检查是否已经是支持的格式
+      if (audioBlob.type === 'audio/wav' || audioBlob.type === 'audio/mp3' || audioBlob.type === 'audio/mpeg') {
+        return audioBlob;
+      }
+
+      // 使用Web Audio API转换格式
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+      
+      // 转换为WAV格式
+      const wavBlob = await this.audioBufferToWav(audioBuffer);
+      return wavBlob;
+    } catch (error) {
+      console.warn('音频格式转换失败，使用原始格式:', error);
+      return audioBlob;
+    }
+  }
+
+  /**
+   * 将AudioBuffer转换为WAV格式
+   */
+  private async audioBufferToWav(audioBuffer: AudioBuffer): Promise<Blob> {
+    const length = audioBuffer.length;
+    const sampleRate = audioBuffer.sampleRate;
+    const numberOfChannels = audioBuffer.numberOfChannels;
+    const arrayBuffer = new ArrayBuffer(44 + length * numberOfChannels * 2);
+    const view = new DataView(arrayBuffer);
+
+    // WAV文件头
+    const writeString = (offset: number, string: string) => {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    };
+
+    writeString(0, 'RIFF');
+    view.setUint32(4, 36 + length * numberOfChannels * 2, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, numberOfChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * numberOfChannels * 2, true);
+    view.setUint16(32, numberOfChannels * 2, true);
+    view.setUint16(34, 16, true);
+    writeString(36, 'data');
+    view.setUint32(40, length * numberOfChannels * 2, true);
+
+    // 写入音频数据
+    let offset = 44;
+    for (let i = 0; i < length; i++) {
+      for (let channel = 0; channel < numberOfChannels; channel++) {
+        const sample = Math.max(-1, Math.min(1, audioBuffer.getChannelData(channel)[i]));
+        view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+        offset += 2;
+      }
+    }
+
+    return new Blob([arrayBuffer], { type: 'audio/wav' });
+  }
+
+  /**
    * 发送音频到Whisper API进行转写
    */
   async transcribeAudio(audioBlob: Blob): Promise<ASRResult> {
     try {
+      // 转换音频格式
+      const convertedBlob = await this.convertAudioFormat(audioBlob);
+      
       const formData = new FormData();
-      formData.append('file', audioBlob, 'audio.webm');
+      formData.append('file', convertedBlob, 'audio.wav');
       formData.append('model', this.config.model!);
       formData.append('language', this.config.language!);
       formData.append('temperature', this.config.temperature!.toString());
@@ -157,8 +228,51 @@ class ASRService {
   }
 }
 
-export const asrService = new ASRService({
-  apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY || '',
-});
+/**
+ * Web Speech API 备用方案
+ */
+class WebSpeechASRService {
+  private recognition: any;
+
+  constructor() {
+    if (typeof window !== 'undefined') {
+      this.recognition = new (window as any).webkitSpeechRecognition() || new (window as any).SpeechRecognition();
+      this.recognition.continuous = false;
+      this.recognition.interimResults = false;
+      this.recognition.lang = 'zh-CN';
+    }
+  }
+
+  async transcribeAudio(audioBlob: Blob): Promise<ASRResult> {
+    return new Promise((resolve, reject) => {
+      if (!this.recognition) {
+        reject(new Error('浏览器不支持语音识别'));
+        return;
+      }
+
+      this.recognition.onresult = (event: any) => {
+        const result = event.results[0][0];
+        resolve({
+          text: result.transcript,
+          confidence: result.confidence,
+          language: 'zh-CN'
+        });
+      };
+
+      this.recognition.onerror = (event: any) => {
+        reject(new Error(`语音识别错误: ${event.error}`));
+      };
+
+      this.recognition.start();
+    });
+  }
+}
+
+// 创建服务实例，优先使用OpenAI，降级到Web Speech API
+export const asrService = process.env.NEXT_PUBLIC_OPENAI_API_KEY 
+  ? new ASRService({
+      apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
+    })
+  : new WebSpeechASRService();
 
 export default ASRService;
