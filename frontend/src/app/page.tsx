@@ -83,7 +83,7 @@ export default function Home() {
                   // 退出登录后刷新页面以立即更新状态
                   window.location.reload();
                 }}
-                className="px-3 py-1 border-2 border-white/40 rounded-none bg-transparent text-white hover:border-white/60 hover:bg-white/10 transition-colors shadow-[2px_2px_0_0_#ffffff20] text-sm"
+                className="px-3 py-1 border-2 border-white/40 rounded-none bg-transparent text-white hover:border-white/60 hover:bg-white/10 transition-colors shadow-[2px_2px_0_0_#ffffff20] text-sm cursor-pointer"
               >
                 退出
               </button>
@@ -126,7 +126,7 @@ export default function Home() {
             <div className="mt-3">
               <button
                 onClick={() => load()}
-                className="px-3 py-2 border-2 border-white/40 rounded-none bg-transparent text-white hover:border-white/60 hover:bg-white/10 transition-colors shadow-[4px_4px_0_0_#ffffff20]"
+                className="cursor-pointer px-3 py-2 border-2 border-white/40 rounded-none bg-transparent text-white hover:border-white/60 hover:bg-white/10 transition-colors shadow-[4px_4px_0_0_#ffffff20]"
               >搜索</button>
             </div>
           </div>
@@ -211,7 +211,7 @@ export default function Home() {
                           }
                         }}
                         disabled={creatingId === c.id}
-                        className="w-full rounded-none border-2 border-white/40 px-4 py-2 text-center text-sm text-white transition-colors hover:border-white/80 hover:bg-white/10 shadow-[4px_4px_0_0_#ffffff20] disabled:opacity-50"
+                        className="cursor-pointer w-full rounded-none border-2 border-white/40 px-4 py-2 text-center text-sm text-white transition-colors hover:border-white/80 hover:bg-white/10 shadow-[4px_4px_0_0_#ffffff20] disabled:opacity-50"
                       >
                         {creatingId === c.id ? "创建会话中…" : "开始对话"}
                       </button>

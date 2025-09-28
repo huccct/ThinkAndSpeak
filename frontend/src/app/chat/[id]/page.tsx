@@ -16,10 +16,9 @@ import { useChatSendMessage, useChatGetConversation } from "@/modules/chat/chat.
 import { useAuthToken, useAuthUser, useAuthInitializeAuth } from "@/modules/auth/auth.store";
 import { UserAvatar } from "@/components/UserAvatar";
 import { useTTS } from "@/hooks/useTTS";
-import { useVoiceConversation } from "@/hooks/useVoiceConversation";
-import { RecordingFeedback } from "@/components/RecordingFeedback";
-import { VoiceConversationButton } from "@/components/VoiceConversationButton";
+import { useASR } from "@/hooks/useASR";
 import { TTSPlayButton } from "@/components/TTSPlayButton";
+import { VoiceRecordButton } from "@/components/VoiceRecordButton";
 
 type Msg = { role: "user" | "assistant"; content: string; timestamp?: number };
 
@@ -49,6 +48,18 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     clearError: clearTTSError 
   } = useTTS();
 
+  // ASR功能
+  const {
+    isRecording: asrRecording,
+    isProcessing: asrProcessing,
+    result: asrResult,
+    error: asrError,
+    startRecording,
+    stopRecording,
+    clearResult: clearASRResult,
+    clearError: clearASRError
+  } = useASR();
+
   const [skills, setSkills] = useState<SkillToggle>({
     socratic: resolvedParams.id === "socrates",
     quotes: true,
@@ -59,50 +70,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [voiceMode, setVoiceMode] = useState(false); // 语音对话模式
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // 创建发送消息的API函数
-  const sendMessageApi = useCallback(async (message: string): Promise<string> => {
-    // 获取当前最新的会话ID
-    const currentConversationId = conversationId || 
-      (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('session') : null);
-    
-    if (!currentConversationId || !ch) {
-      console.warn('会话ID或角色信息不可用，等待初始化...', { currentConversationId, ch: ch?.name });
-      // 等待一小段时间后重试
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return `抱歉，系统正在初始化，请稍后再试。`;
-    }
-    
-    return await sendMessage(currentConversationId, message, ch.name);
-  }, [conversationId, ch, sendMessage]);
-
-  // 语音对话功能
-  const voiceConversation = useVoiceConversation({
-    autoSendThreshold: 2000,
-    silenceThreshold: 1500,
-    minMessageLength: 2,
-    sendMessageApi,
-    conversationId: conversationId || undefined,
-    characterName: ch?.name,
-    onMessageSent: (message) => {
-      const userMsg: Msg = {
-        role: "user",
-        content: message,
-        timestamp: Date.now(),
-      };
-      setMessages(prev => [...prev, userMsg]);
-    },
-    onReplyReceived: (reply) => {
-      const assistantMsg: Msg = {
-        role: "assistant",
-        content: reply,
-        timestamp: Date.now(),
-      };
-      setMessages(prev => [...prev, assistantMsg]);
-    },
-  });
 
   useEffect(() => {
     initializeAuth();
@@ -151,13 +119,13 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
           <div className="text-red-400 mb-4">加载失败: {error}</div>
           <button
             onClick={() => load()}
-            className="px-4 py-2 border-2 border-white/30 rounded-none bg-transparent text-white hover:border-white/50 hover:bg-white/10 transition-colors mr-4"
+            className="cursor-pointer px-4 py-2 border-2 border-white/30 rounded-none bg-transparent text-white hover:border-white/50 hover:bg-white/10 transition-colors mr-4"
           >
             重试
           </button>
           <Link
             href="/characters"
-            className="px-4 py-2 border-2 border-white/30 rounded-none bg-transparent text-white hover:border-white/50 hover:bg-white/10 transition-colors"
+            className="cursor-pointer px-4 py-2 border-2 border-white/30 rounded-none bg-transparent text-white hover:border-white/50 hover:bg-white/10 transition-colors"
           >
             返回角色列表
           </Link>
@@ -208,8 +176,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     // 只有在没有历史消息且没有会话ID时才显示欢迎消息
     if (messages.length === 0 && !conversationId) {
       const greet = `你好！${ch ? `我是${ch.name}。` : ""}${
-        // @ts-ignore backwards compat for static characters structure if present
-        ch?.sample_topics?.[0] || ch?.sampleTopics?.[0] || "有什么想聊的吗？"
+        ch?.topics?.[0] || "有什么想聊的吗？"
       }`;
       setMessages([
         {
@@ -228,6 +195,14 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // 处理ASR结果
+  useEffect(() => {
+    if (asrResult?.text) {
+      setInput(asrResult.text);
+      clearASRResult();
+    }
+  }, [asrResult, clearASRResult]);
 
 
   async function handleSendText() {
@@ -285,27 +260,11 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     }
   }
 
-  // 切换语音对话模式
-  const toggleVoiceMode = () => {
-    if (voiceMode) {
-      // 停止语音对话
-      voiceConversation.stopConversation();
-      setVoiceMode(false);
-    } else {
-      // 启动语音对话
-      setVoiceMode(true);
-      voiceConversation.startConversation();
-    }
-  };
 
 
 
   return (
-    <>
-      {/* 录音反馈组件 */}
-      <RecordingFeedback isRecording={voiceConversation.isListening} />
-      
-      <div
+    <div
         className="min-h-screen bg-black text-white font-mono"
         style={{
           backgroundImage:
@@ -336,13 +295,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
             <div>
               <h1 className="text-xl font-semibold uppercase tracking-wider">{ch?.name ?? "加载中"}</h1>
               <p className="text-sm text-white/60">
-                {(
-                  // 兼容不同字段命名
-                  (ch && (// @ts-ignore legacy
-                    ch.sample_topics || ch.sampleTopics || ch.topics)) || []
-                )
-                  .slice(0, 2)
-                  .join(" · ")}
+                {(ch?.topics || []).slice(0, 2).join(" · ")}
               </p>
             </div>
           </div>
@@ -422,10 +375,10 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                         text={msg.content}
                         isPlaying={ttsPlaying && msg.content === currentText}
                         isLoading={ttsLoading && msg.content === currentText}
-                        onPlay={(text) => speak(text)}
+                        onPlay={(text) => speak(text, undefined, resolvedParams.id)}
                         onStop={stopTTS}
                         size="sm"
-                        className="flex-shrink-0 mt-1"
+                        className="cursor-pointer flex-shrink-0 mt-1"
                       />
                     )}
                   </div>
@@ -458,100 +411,45 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         </div>
 
         <div className="border-t-2 border-white/20 pt-6">
-          {/* 语音对话模式切换 */}
-          <div className="flex items-center justify-center mb-4">
+          <div className="flex gap-3">
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendText();
+                }
+              }}
+              placeholder="输入消息... (Shift+Enter 换行)"
+              className="flex-1 border-2 border-white/40 rounded-none focus-visible:border-white focus-visible:ring-0 shadow-[4px_4px_0_0_#ffffff20] bg-black text-white placeholder:text-white/40"
+              disabled={sending}
+            />
+            <VoiceRecordButton
+              isRecording={asrRecording}
+              isProcessing={asrProcessing}
+              onStart={startRecording}
+              onStop={stopRecording}
+              disabled={sending}
+            />
             <button
-              onClick={toggleVoiceMode}
-              disabled={!conversationId || !ch}
-              className={`px-4 py-2 border-2 rounded-none transition-all duration-200 shadow-[4px_4px_0_0_#ffffff20] disabled:opacity-50 disabled:cursor-not-allowed ${
-                voiceMode 
-                  ? 'border-green-400 bg-green-400/20 text-green-400' 
-                  : 'border-white/40 bg-transparent text-white hover:border-white/60 hover:bg-white/10'
-              }`}
+              onClick={handleSendText}
+              disabled={!input.trim() || sending}
+              className="cursor-pointer px-4 py-2 border-2 border-white/40 rounded-none bg-transparent text-white hover:border-white/60 hover:bg-white/10 transition-colors shadow-[4px_4px_0_0_#ffffff20] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {!conversationId || !ch 
-                ? '正在初始化...' 
-                : voiceMode 
-                  ? '退出语音对话' 
-                  : '开始语音对话'
-              }
+              发送
             </button>
           </div>
-
-          {voiceMode ? (
-            /* 语音对话模式 */
-            <div className="flex flex-col items-center gap-4">
-              <VoiceConversationButton
-                isActive={voiceConversation.isActive}
-                isListening={voiceConversation.isListening}
-                isProcessing={voiceConversation.isProcessing}
-                isSpeaking={voiceConversation.isSpeaking}
-                audioLevel={voiceConversation.audioLevel}
-                speechDetected={voiceConversation.speechDetected}
-                onStart={voiceConversation.startConversation}
-                onStop={voiceConversation.stopConversation}
-                disabled={!conversationId || !ch}
-              />
-              
-              {voiceConversation.currentMessage && (
-                <div className="text-sm text-white/60 text-center max-w-md">
-                  识别到: "{voiceConversation.currentMessage}"
-                </div>
-              )}
-              
-              {(voiceConversation.asrError || voiceConversation.ttsError) && (
-                <div className="text-xs text-red-400 text-center">
-                  {voiceConversation.asrError && `语音识别错误: ${voiceConversation.asrError}`}
-                  {voiceConversation.ttsError && `语音合成错误: ${voiceConversation.ttsError}`}
-                </div>
-              )}
-              
-              {/* 调试信息 */}
-              {!conversationId && (
-                <div className="text-xs text-yellow-400 text-center">
-                  等待会话ID初始化...
-                </div>
-              )}
-              {!ch && (
-                <div className="text-xs text-yellow-400 text-center">
-                  等待角色信息加载...
-                </div>
-              )}
-            </div>
-          ) : (
-            /* 文本输入模式 */
-            <div className="flex gap-3">
-              <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendText();
-                  }
-                }}
-                placeholder="输入消息... (Shift+Enter 换行)"
-                className="flex-1 border-2 border-white/40 rounded-none focus-visible:border-white focus-visible:ring-0 shadow-[4px_4px_0_0_#ffffff20] bg-black text-white placeholder:text-white/40"
-                disabled={sending}
-              />
-              <button
-                onClick={handleSendText}
-                disabled={!input.trim() || sending}
-                className="px-4 py-2 border-2 border-white/40 rounded-none bg-transparent text-white hover:border-white/60 hover:bg-white/10 transition-colors shadow-[4px_4px_0_0_#ffffff20] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                发送
-              </button>
-            </div>
-          )}
           
-          {ttsError && (
+          {/* 错误提示 */}
+          {(asrError || ttsError) && (
             <div className="mt-2 text-xs text-red-400">
-              语音播放失败: {ttsError}
+              {asrError && `语音识别错误: ${asrError}`}
+              {ttsError && `语音播放失败: ${ttsError}`}
             </div>
           )}
         </div>
       </div>
-      </div>
-    </>
+    </div>
   );
 }

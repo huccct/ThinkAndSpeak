@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader2, ArrowLeft } from "lucide-react";
 import { 
   useCharacters, 
   useCharactersLoading, 
@@ -84,9 +84,10 @@ export default function CharactersPage() {
           <div className="flex items-center gap-4">
             <Link
               href="/"
-              className="text-sm text-white/70 hover:text-white transition-colors"
+              className="flex items-center gap-1 text-sm text-white/70 hover:text-white transition-colors"
             >
-              ← 返回
+              <ArrowLeft className="h-4 w-4" />
+              返回
             </Link>
             <div>
               <h1 className="text-2xl font-semibold uppercase tracking-wider text-white">角色库</h1>
@@ -116,7 +117,7 @@ export default function CharactersPage() {
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id as Category)}
-                className={`px-4 py-2 border-2 rounded-none transition-colors shadow-[3px_3px_0_0_#ffffff20] ${
+                className={`cursor-pointer px-4 py-2 border-2 rounded-none transition-colors shadow-[3px_3px_0_0_#ffffff20] ${
                   selectedCategory === category.id
                     ? "border-white/60 bg-white/10 text-white"
                     : "border-white/30 bg-transparent text-white/70 hover:border-white/50 hover:text-white"
@@ -141,7 +142,7 @@ export default function CharactersPage() {
               <div className="text-red-400 mb-4">加载失败: {error}</div>
               <button
                 onClick={() => loadCharacters()}
-                className="px-4 py-2 border-2 border-white/30 rounded-none bg-transparent text-white hover:border-white/50 hover:bg-white/10 transition-colors"
+                className="cursor-pointer px-4 py-2 border-2 border-white/30 rounded-none bg-transparent text-white hover:border-white/50 hover:bg-white/10 transition-colors"
               >
                 重试
               </button>
@@ -231,7 +232,7 @@ export default function CharactersPage() {
                   setQuery("");
                   loadCharacters();
                 }}
-                className="px-4 py-2 border-2 border-white/30 rounded-none bg-transparent text-white hover:border-white/50 hover:bg-white/10 transition-colors"
+                className="cursor-pointer px-4 py-2 border-2 border-white/30 rounded-none bg-transparent text-white hover:border-white/50 hover:bg-white/10 transition-colors"
               >
                 查看所有角色
               </button>

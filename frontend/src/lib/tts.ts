@@ -15,6 +15,21 @@ export interface TTSConfig {
   };
 }
 
+// 当前使用的音色配置
+export const VOICE_PRESETS = {
+  current: {
+    'yoZ06aMxZJJ28mfd3POQ': { name: 'Sam', gender: 'male', language: 'zh', description: '温和、亲切的男性声音' },
+  }
+};
+
+// 角色音色映射 - 统一使用Sam音色
+export const CHARACTER_VOICES = {
+  'socrates': 'yoZ06aMxZJJ28mfd3POQ', // Sam - 温和、亲切的男音
+  'harry': 'yoZ06aMxZJJ28mfd3POQ',   // Sam - 年轻、温和的男音
+  'sherlock': 'yoZ06aMxZJJ28mfd3POQ', // Sam - 温和、亲切的男音
+  'default': 'yoZ06aMxZJJ28mfd3POQ'   // Sam - 默认温和男音
+};
+
 export interface TTSResult {
   audioBlob: Blob;
   duration?: number;
@@ -25,12 +40,13 @@ class TTSService {
 
   constructor(config: TTSConfig) {
     this.config = {
-      voiceId: '21m00Tcm4TlvDq8ikWAM', // 默认女性声音
-      modelId: 'eleven_monolingual_v1',
+      voiceId: 'yoZ06aMxZJJ28mfd3POQ', 
+      modelId: 'eleven_multilingual_v2', 
       voiceSettings: {
-        stability: 0.5,
-        similarityBoost: 0.5,
-        useSpeakerBoost: true,
+        stability: 0.6,         // 降低稳定性，增加自然变化
+        similarityBoost: 0.7,   // 降低相似度，增加个性化
+        style: 0.4,            // 增加风格，让声音更生动
+        useSpeakerBoost: true,  // 启用扬声器增强
       },
       ...config,
     };
@@ -61,18 +77,65 @@ class TTSService {
   }
 
   /**
+   * 根据角色获取音色ID
+   */
+  getVoiceForCharacter(characterId: string): string {
+    return CHARACTER_VOICES[characterId as keyof typeof CHARACTER_VOICES] || CHARACTER_VOICES.default;
+  }
+
+  /**
+   * 获取音色预设信息
+   */
+  getVoicePreset(voiceId: string) {
+    for (const category of Object.values(VOICE_PRESETS)) {
+      if (category[voiceId as keyof typeof category]) {
+        return category[voiceId as keyof typeof category];
+      }
+    }
+    return null;
+  }
+
+  /**
+   * 预处理文本，让语音更自然
+   */
+  private preprocessText(text: string): string {
+    // 移除多余的标点符号
+    let processed = text.trim()
+      .replace(/[。，！？；：""''（）【】]/g, ' ') // 替换中文标点为空格
+      .replace(/[.,!?;:"'()\[\]]/g, ' ') // 替换英文标点为空格
+      .replace(/\s+/g, ' ') // 合并多个空格
+      .trim();
+
+    // 添加自然的停顿
+    processed = processed
+      .replace(/。/g, '. ') // 句号后添加停顿
+      .replace(/，/g, ', ') // 逗号后添加停顿
+      .replace(/！/g, '! ') // 感叹号后添加停顿
+      .replace(/？/g, '? '); // 问号后添加停顿
+
+    return processed;
+  }
+
+  /**
    * 文本转语音
    */
-  async synthesizeSpeech(text: string, voiceId?: string): Promise<TTSResult> {
+  async synthesizeSpeech(text: string, voiceId?: string, characterId?: string): Promise<TTSResult> {
     try {
       if (!text.trim()) {
         throw new Error('文本内容不能为空');
       }
 
-      const selectedVoiceId = voiceId || this.config.voiceId;
+      // 优先使用传入的voiceId，然后是角色对应的音色，最后是默认音色
+      const selectedVoiceId = voiceId || (characterId ? this.getVoiceForCharacter(characterId) : this.config.voiceId);
+      
+      // 预处理文本，让语音更自然
+      const preprocessedText = this.preprocessText(text);
+      
+      // 添加更自然的语音控制 - 使用SSML标签优化语速和语调
+      const processedText = `<speak><prosody rate="0.85" pitch="+5%" volume="loud">${preprocessedText}</prosody></speak>`;
       
       const requestBody = {
-        text: text.trim(),
+        text: processedText,
         model_id: this.config.modelId,
         voice_settings: this.config.voiceSettings,
       };
@@ -157,6 +220,30 @@ class TTSService {
    */
   updateConfig(newConfig: Partial<TTSConfig>): void {
     this.config = { ...this.config, ...newConfig };
+  }
+
+  /**
+   * 获取自然语音配置
+   */
+  getNaturalVoiceSettings() {
+    return {
+      stability: 0.5,         // 中等稳定性，允许自然变化
+      similarityBoost: 0.6,   // 中等相似度，增加个性化
+      style: 0.5,            // 中等风格，让声音更生动
+      useSpeakerBoost: true,  // 启用扬声器增强
+    };
+  }
+
+  /**
+   * 获取专业语音配置
+   */
+  getProfessionalVoiceSettings() {
+    return {
+      stability: 0.8,         // 高稳定性，专业感
+      similarityBoost: 0.9,   // 高相似度，保持一致性
+      style: 0.2,            // 低风格，更正式
+      useSpeakerBoost: true,  // 启用扬声器增强
+    };
   }
 }
 

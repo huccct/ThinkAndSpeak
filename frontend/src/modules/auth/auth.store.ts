@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { authApi } from './auth.api';
 import type { RegisterRequest, LoginRequest } from './auth.types';
+import { useChatStore } from '../chat/chat.store';
+import { useCharactersStore } from '../characters/characters.store';
 
 // localStorage keys
 const TOKEN_KEY = 'think-speak-token';
@@ -89,7 +91,20 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
     if (typeof window !== 'undefined') {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
+      
+      // 清除所有会话相关的localStorage
+      const keys = Object.keys(localStorage);
+      keys.forEach(key => {
+        if (key.startsWith('conversation_')) {
+          localStorage.removeItem(key);
+        }
+      });
     }
+    
+    // 清除其他store的状态
+    useChatStore.getState().clearAllConversations();
+    useCharactersStore.getState().clear();
+    
     set({ user: null, token: null, error: undefined });
   },
 

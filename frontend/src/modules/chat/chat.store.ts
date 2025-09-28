@@ -2,8 +2,6 @@ import { create } from 'zustand';
 import { chatApi } from './chat.api';
 import type { SendMessageRequest, ConversationMessage } from './chat.types';
 
-const FIXED_USER_ID = 'demo-user-0001';
-
 type ChatState = {
   conversations: Record<string, string>; // characterId -> conversationId
   loading: boolean;
@@ -17,6 +15,7 @@ type ChatActions = {
   getExistingConversationId: (characterId: string) => string | null;
   saveConversationId: (characterId: string, conversationId: string) => void;
   clearError: () => void;
+  clearAllConversations: () => void;
 };
 
 export const useChatStore = create<ChatState & ChatActions>((set, get) => ({
@@ -27,7 +26,7 @@ export const useChatStore = create<ChatState & ChatActions>((set, get) => ({
   createConversation: async (characterId: string) => {
     set({ loading: true, error: undefined });
     try {
-      const res = await chatApi.createConversation({ characterId, userId: FIXED_USER_ID });
+      const res = await chatApi.createConversation({ characterId: parseInt(characterId) });
       if (res.code !== 0) throw new Error(res.message || 'create conversation failed');
       
       const conversationId = res.data.conversationId;
@@ -95,6 +94,20 @@ export const useChatStore = create<ChatState & ChatActions>((set, get) => ({
   clearError: () => {
     set({ error: undefined });
   },
+
+  clearAllConversations: () => {
+    // 清除localStorage中的所有会话
+    if (typeof window !== 'undefined') {
+      const keys = Object.keys(localStorage);
+      keys.forEach(key => {
+        if (key.startsWith('conversation_')) {
+          localStorage.removeItem(key);
+        }
+      });
+    }
+    // 清除store中的会话状态
+    set({ conversations: {} });
+  },
 }));
 
 // selectors
@@ -108,3 +121,4 @@ export const useChatGetConversation = () => useChatStore(s => s.getConversation)
 export const useChatGetExistingConversationId = () => useChatStore(s => s.getExistingConversationId);
 export const useChatSaveConversationId = () => useChatStore(s => s.saveConversationId);
 export const useChatClearError = () => useChatStore(s => s.clearError);
+export const useChatClearAllConversations = () => useChatStore(s => s.clearAllConversations);

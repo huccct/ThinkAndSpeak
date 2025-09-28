@@ -11,7 +11,7 @@ export interface TTSState {
 }
 
 export interface TTSReturn extends TTSState {
-  speak: (text: string, voiceId?: string) => Promise<void>;
+  speak: (text: string, voiceId?: string, characterId?: string) => Promise<void>;
   stop: () => void;
   clearError: () => void;
 }
@@ -27,7 +27,7 @@ export function useTTS(): TTSReturn {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentRequestRef = useRef<AbortController | null>(null);
 
-  const speak = useCallback(async (text: string, voiceId?: string) => {
+  const speak = useCallback(async (text: string, voiceId?: string, characterId?: string) => {
     try {
       // 如果正在播放，先停止
       if (state.isPlaying) {
@@ -44,7 +44,7 @@ export function useTTS(): TTSReturn {
       // 创建取消控制器
       currentRequestRef.current = new AbortController();
 
-      const result = await ttsService.synthesizeSpeech(text, voiceId);
+      const result = await ttsService.synthesizeSpeech(text, voiceId, characterId);
       
       // 检查是否被取消
       if (currentRequestRef.current?.signal.aborted) {
