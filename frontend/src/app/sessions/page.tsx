@@ -11,6 +11,7 @@ import {
   useCharactersLoading,
   useCharactersError 
 } from "@/modules/characters/characters.store";
+import { ArrowLeft } from "lucide-react";
 
 type SessionMessage = {
   role: "user" | "assistant";
@@ -143,9 +144,10 @@ export default function SessionsPage() {
           <div className="flex items-center gap-4">
             <Link
               href="/"
-              className="text-sm text-white/70 hover:text-white transition-colors"
+              className="flex items-center gap-1 text-sm text-white/70 hover:text-white transition-colors"
             >
-              ← 返回
+              <ArrowLeft className="h-4 w-4" />
+              返回
             </Link>
             <div>
               <h1 className="text-2xl font-semibold uppercase tracking-wider text-white">会话历史</h1>

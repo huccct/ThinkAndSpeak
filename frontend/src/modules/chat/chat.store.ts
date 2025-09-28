@@ -2,8 +2,6 @@ import { create } from 'zustand';
 import { chatApi } from './chat.api';
 import type { SendMessageRequest, ConversationMessage } from './chat.types';
 
-const FIXED_USER_ID = 'demo-user-0001';
-
 type ChatState = {
   conversations: Record<string, string>; // characterId -> conversationId
   loading: boolean;
@@ -27,7 +25,7 @@ export const useChatStore = create<ChatState & ChatActions>((set, get) => ({
   createConversation: async (characterId: string) => {
     set({ loading: true, error: undefined });
     try {
-      const res = await chatApi.createConversation({ characterId, userId: FIXED_USER_ID });
+      const res = await chatApi.createConversation({ characterId: parseInt(characterId) });
       if (res.code !== 0) throw new Error(res.message || 'create conversation failed');
       
       const conversationId = res.data.conversationId;

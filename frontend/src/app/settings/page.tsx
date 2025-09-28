@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowLeft } from "lucide-react";
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState({
@@ -82,9 +83,10 @@ export default function SettingsPage() {
           <div className="flex items-center gap-4">
             <Link
               href="/"
-              className="text-sm text-white/70 hover:text-white transition-colors"
+              className="flex items-center gap-1 text-sm text-white/70 hover:text-white transition-colors"
             >
-              ← 返回
+              <ArrowLeft className="h-4 w-4" />
+              返回
             </Link>
             <div>
               <h1 className="text-xl font-semibold uppercase tracking-wider">设置</h1>
