@@ -9,6 +9,8 @@ import { ArrowLeft } from "lucide-react";
 import {
   useCharacters,
   useCharactersLoad,
+  useCharactersLoading,
+  useCharactersError,
 } from "@/modules/characters/characters.store";
 import { useChatSendMessage, useChatGetConversation } from "@/modules/chat/chat.store";
 import { useAuthToken, useAuthUser, useAuthInitializeAuth } from "@/modules/auth/auth.store";
@@ -25,6 +27,8 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   const resolvedParams = use(params);
   const list = useCharacters();
   const load = useCharactersLoad();
+  const loading = useCharactersLoading();
+  const error = useCharactersError();
   const ch = useMemo(() => list.find((c) => c.id === resolvedParams.id), [list, resolvedParams.id]);
   
   const sendMessage = useChatSendMessage();
@@ -109,6 +113,58 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       load();
     }
   }, [list.length, load, token]);
+
+  // 如果角色未找到且正在加载，显示加载状态
+  if (loading && !ch) {
+    return (
+      <div className="min-h-screen bg-black text-white font-mono flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-2 border-white/40 border-t-white mx-auto mb-4"></div>
+          <div className="text-white/60">加载角色信息中...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // 如果角色未找到且加载完成，显示错误
+  if (!loading && !ch && !error) {
+    return (
+      <div className="min-h-screen bg-black text-white font-mono flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-400 mb-4">角色不存在</div>
+          <Link
+            href="/characters"
+            className="px-4 py-2 border-2 border-white/30 rounded-none bg-transparent text-white hover:border-white/50 hover:bg-white/10 transition-colors"
+          >
+            返回角色列表
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // 如果加载出错
+  if (error) {
+    return (
+      <div className="min-h-screen bg-black text-white font-mono flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-400 mb-4">加载失败: {error}</div>
+          <button
+            onClick={() => load()}
+            className="px-4 py-2 border-2 border-white/30 rounded-none bg-transparent text-white hover:border-white/50 hover:bg-white/10 transition-colors mr-4"
+          >
+            重试
+          </button>
+          <Link
+            href="/characters"
+            className="px-4 py-2 border-2 border-white/30 rounded-none bg-transparent text-white hover:border-white/50 hover:bg-white/10 transition-colors"
+          >
+            返回角色列表
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   // 初始化会话ID并加载历史消息
   useEffect(() => {

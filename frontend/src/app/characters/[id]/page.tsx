@@ -3,11 +3,16 @@
 import { useEffect, useMemo, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getCharacter } from "@/lib/characters";
 import { SkillToggle } from "@/lib/skills";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { 
+  useCharacters, 
+  useCharactersLoad,
+  useCharactersLoading,
+  useCharactersError 
+} from "@/modules/characters/characters.store";
 
 type Category = "philosophy" | "mystery" | "fantasy";
 
@@ -33,74 +38,141 @@ const getRecommendedSkills = (characterId: string): SkillToggle => {
   }
 };
 
-const getCharacterDetails = (characterId: string) => {
-  switch (characterId) {
-    case "harry":
-      return {
-        category: "奇幻",
-        personality: "勇敢、真诚、年轻",
-        speakingStyle: "口语化、充满热情、偶尔紧张",
-        background: "霍格沃茨的年轻魔法师，经历过多次冒险，对朋友忠诚，面对困难时勇敢坚定。",
-        strengths: ["面对恐惧", "团队合作", "魔法知识", "正义感"],
-        topics: ["霍格沃茨生活", "魁地奇策略", "如何面对恐惧", "友谊的力量", "魔法的奥秘"],
-        sampleQuestions: [
-          "我最近很害怕考试，你是怎么克服恐惧的？",
-          "能教我一些实用的魔法技巧吗？",
-          "魁地奇比赛有什么策略？"
-        ]
-      };
-    case "socrates":
-      return {
-        category: "哲学",
-        personality: "智慧、耐心、理性",
-        speakingStyle: "温和、反问式、引导思考",
-        background: "古希腊哲学家，以产婆术闻名，通过提问引导人们发现真理，相信知识即美德。",
-        strengths: ["逻辑思考", "深度提问", "智慧引导", "道德思辨"],
-        topics: ["正义是什么", "如何过好审视的人生", "知识即美德吗", "真理的探索", "智慧的定义"],
-        sampleQuestions: [
-          "什么是真正的正义？",
-          "如何判断一件事是否正确？",
-          "知识真的能带来美德吗？"
-        ]
-      };
-    case "sherlock":
-      return {
-        category: "推理",
-        personality: "冷静、专注、理性",
-        speakingStyle: "简练、逻辑清晰、证据导向",
-        background: "天才侦探，擅长观察细节和逻辑推理，习惯通过证据和演绎法解决复杂案件。",
-        strengths: ["观察力", "逻辑推理", "证据分析", "案件破解"],
-        topics: ["推理训练", "观察力练习", "案件结构化分析", "逻辑思维", "细节观察"],
-        sampleQuestions: [
-          "如何训练观察力？",
-          "分析案件有什么步骤？",
-          "逻辑推理的关键是什么？"
-        ]
-      };
-    default:
-      return {
-        category: "未知",
-        personality: "待定",
-        speakingStyle: "待定",
-        background: "角色信息待完善。",
-        strengths: [],
-        topics: [],
-        sampleQuestions: []
-      };
+const getCharacterDetails = (character: any) => {
+  if (!character) {
+    return {
+      category: "未知",
+      personality: "待定",
+      speakingStyle: "待定",
+      background: "角色信息待完善。",
+      strengths: [],
+      topics: [],
+      sampleQuestions: []
+    };
   }
+
+  const topics = character.topics || [];
+  const persona = character.persona || "";
+  
+  // 根据角色数据动态生成详情
+  const getCategoryFromCharacter = (char: any) => {
+    if (topics.some((t: string) => t.includes("哲学") || t.includes("思考")) || 
+        persona.includes("苏格拉底") || persona.includes("哲学")) {
+      return "哲学";
+    }
+    if (topics.some((t: string) => t.includes("推理") || t.includes("侦探")) || 
+        persona.includes("福尔摩斯") || persona.includes("推理")) {
+      return "推理";
+    }
+    if (topics.some((t: string) => t.includes("魔法") || t.includes("奇幻")) || 
+        persona.includes("哈利") || persona.includes("魔法")) {
+      return "奇幻";
+    }
+    return "智能对话";
+  };
+
+  const getPersonalityFromPersona = (persona: string) => {
+    if (persona.includes("勇敢") || persona.includes("年轻")) return "勇敢、真诚、年轻";
+    if (persona.includes("智慧") || persona.includes("理性")) return "智慧、耐心、理性";
+    if (persona.includes("冷静") || persona.includes("专注")) return "冷静、专注、理性";
+    return "智能、友好、有趣";
+  };
+
+  const getSpeakingStyleFromPersona = (persona: string) => {
+    if (persona.includes("口语化") || persona.includes("热情")) return "口语化、充满热情、偶尔紧张";
+    if (persona.includes("反问") || persona.includes("引导")) return "温和、反问式、引导思考";
+    if (persona.includes("简练") || persona.includes("逻辑")) return "简练、逻辑清晰、证据导向";
+    return "自然、友好、富有表现力";
+  };
+
+  return {
+    category: getCategoryFromCharacter(character),
+    personality: getPersonalityFromPersona(persona),
+    speakingStyle: getSpeakingStyleFromPersona(persona),
+    background: persona || "一个有趣的AI角色，等待与你对话。",
+    strengths: topics.slice(0, 4), // 使用前4个话题作为擅长领域
+    topics: topics,
+    sampleQuestions: [
+      `你好，${character.name}！能介绍一下自己吗？`,
+      `我想了解你的想法，能聊聊吗？`,
+      `有什么有趣的话题想分享吗？`
+    ]
+  };
 };
 
 export default function CharacterDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const resolvedParams = use(params);
-  const ch = useMemo(() => getCharacter(resolvedParams.id), [resolvedParams.id]);
+  
+  // 使用角色store
+  const characters = useCharacters();
+  const loadCharacters = useCharactersLoad();
+  const loading = useCharactersLoading();
+  const error = useCharactersError();
+  
+  const ch = useMemo(() => characters.find((c) => c.id === resolvedParams.id), [characters, resolvedParams.id]);
   const [skills, setSkills] = useState<SkillToggle>(getRecommendedSkills(resolvedParams.id));
   
-  const details = useMemo(() => getCharacterDetails(resolvedParams.id), [resolvedParams.id]);
+  const details = useMemo(() => getCharacterDetails(ch), [ch]);
 
+  // 初始化加载角色
   useEffect(() => {
-    if (!ch) router.replace("/");
-  }, [ch, router]);
+    if (characters.length === 0) {
+      loadCharacters();
+    }
+  }, [characters.length, loadCharacters]);
+
+  // 如果角色未找到且正在加载，显示加载状态
+  if (loading && !ch) {
+    return (
+      <div className="min-h-screen bg-black text-white font-mono flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-2 border-white/40 border-t-white mx-auto mb-4"></div>
+          <div className="text-white/60">加载角色信息中...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // 如果角色未找到且加载完成，显示错误
+  if (!loading && !ch && !error) {
+    return (
+      <div className="min-h-screen bg-black text-white font-mono flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-400 mb-4">角色不存在</div>
+          <Link
+            href="/characters"
+            className="px-4 py-2 border-2 border-white/30 rounded-none bg-transparent text-white hover:border-white/50 hover:bg-white/10 transition-colors"
+          >
+            返回角色列表
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // 如果加载出错
+  if (error) {
+    return (
+      <div className="min-h-screen bg-black text-white font-mono flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-400 mb-4">加载失败: {error}</div>
+          <button
+            onClick={() => loadCharacters()}
+            className="px-4 py-2 border-2 border-white/30 rounded-none bg-transparent text-white hover:border-white/50 hover:bg-white/10 transition-colors mr-4"
+          >
+            重试
+          </button>
+          <Link
+            href="/characters"
+            className="px-4 py-2 border-2 border-white/30 rounded-none bg-transparent text-white hover:border-white/50 hover:bg-white/10 transition-colors"
+          >
+            返回角色列表
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   function handleStartChat() {
     localStorage.setItem(`character-${resolvedParams.id}-skills`, JSON.stringify(skills));
@@ -127,13 +199,25 @@ export default function CharacterDetailPage({ params }: { params: Promise<{ id: 
             >
               ← 角色库
             </Link>
-            <div>
-              <h1 className="text-2xl font-semibold uppercase tracking-wider text-white">{ch.name}</h1>
-              <div className="flex items-center gap-2 mt-1">
-                <Badge variant="outline" className="rounded-none border-2 border-white/30 text-white text-xs">
-                  {details.category}
-                </Badge>
-                <span className="text-sm text-white/60">{details.personality}</span>
+            <div className="flex items-center gap-4">
+              {ch.avatar && (
+                <img
+                  src={ch.avatar}
+                  alt={ch.name}
+                  className="w-16 h-16 rounded-none border-2 border-white/40 object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              )}
+              <div>
+                <h1 className="text-2xl font-semibold uppercase tracking-wider text-white">{ch.name}</h1>
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge variant="outline" className="rounded-none border-2 border-white/30 text-white text-xs">
+                    {details.category}
+                  </Badge>
+                  <span className="text-sm text-white/60">{details.personality}</span>
+                </div>
               </div>
             </div>
           </div>

@@ -3,9 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getCharacter } from "@/lib/characters";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { 
+  useCharacters, 
+  useCharactersLoad,
+  useCharactersLoading,
+  useCharactersError 
+} from "@/modules/characters/characters.store";
 
 type SessionMessage = {
   role: "user" | "assistant";
@@ -29,10 +34,20 @@ export default function SessionsPage() {
   const router = useRouter();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // 使用角色store
+  const characters = useCharacters();
+  const loadCharacters = useCharactersLoad();
+  const charactersLoading = useCharactersLoading();
+  const charactersError = useCharactersError();
 
   useEffect(() => {
     loadSessions();
-  }, []);
+    // 初始化加载角色
+    if (characters.length === 0) {
+      loadCharacters();
+    }
+  }, [characters.length, loadCharacters]);
 
   function loadSessions() {
     try {
@@ -168,7 +183,7 @@ export default function SessionsPage() {
         ) : (
           <div className="space-y-4">
             {sessions.map((session) => {
-              const character = getCharacter(session.characterId);
+              const character = characters.find(c => c.id === session.characterId);
               if (!character) return null;
 
               return (
@@ -179,7 +194,18 @@ export default function SessionsPage() {
                   <CardHeader className="px-5 pb-0">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 border-2 border-white/30 rounded-none bg-white/5 flex items-center justify-center text-lg">
+                        {character.avatar ? (
+                          <img
+                            src={character.avatar}
+                            alt={character.name}
+                            className="w-10 h-10 rounded-none border-2 border-white/30 object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                            }}
+                          />
+                        ) : null}
+                        <div className={`w-10 h-10 border-2 border-white/30 rounded-none bg-white/5 flex items-center justify-center text-lg ${character.avatar ? 'hidden' : ''}`}>
                           {character.name.charAt(0)}
                         </div>
                         <div>
