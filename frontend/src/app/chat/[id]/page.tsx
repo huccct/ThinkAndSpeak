@@ -375,7 +375,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                         text={msg.content}
                         isPlaying={ttsPlaying && msg.content === currentText}
                         isLoading={ttsLoading && msg.content === currentText}
-                        onPlay={(text) => speak(text)}
+                        onPlay={(text) => speak(text, undefined, resolvedParams.id)}
                         onStop={stopTTS}
                         size="sm"
                         className="cursor-pointer flex-shrink-0 mt-1"

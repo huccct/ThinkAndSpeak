@@ -3,14 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState({
-    model: "gpt-4o-mini",
-    ttsVoice: "alloy",
     defaultSkills: {
       socratic: false,
       quotes: true,
@@ -21,24 +17,8 @@ export default function SettingsPage() {
       webSpeechApi: true,
       localTts: false,
     },
-    preferences: {
-      responseSpeed: "balanced", // fast, balanced, quality
-      costOptimization: true,
-    },
   });
 
-  const modelOptions = [
-    { id: "gpt-4o-mini", name: "GPT-4o Mini", description: "快速响应，成本低" },
-    { id: "gpt-4o", name: "GPT-4o", description: "高质量，速度适中" },
-    { id: "claude-3-haiku", name: "Claude 3 Haiku", description: "极速响应" },
-  ];
-
-  const voiceOptions = [
-    { id: "alloy", name: "Alloy", description: "中性，清晰" },
-    { id: "verse", name: "Verse", description: "温暖，友好" },
-    { id: "nova", name: "Nova", description: "年轻，活泼" },
-    { id: "shimmer", name: "Shimmer", description: "优雅，成熟" },
-  ];
 
   function handleSave() {
     // TODO: 保存到 localStorage
@@ -49,8 +29,6 @@ export default function SettingsPage() {
   function handleReset() {
     if (confirm("确定要重置所有设置吗？")) {
       setSettings({
-        model: "gpt-4o-mini",
-        ttsVoice: "alloy",
         defaultSkills: {
           socratic: false,
           quotes: true,
@@ -60,10 +38,6 @@ export default function SettingsPage() {
         fallbacks: {
           webSpeechApi: true,
           localTts: false,
-        },
-        preferences: {
-          responseSpeed: "balanced",
-          costOptimization: true,
         },
       });
     }
@@ -90,48 +64,11 @@ export default function SettingsPage() {
             </Link>
             <div>
               <h1 className="text-xl font-semibold uppercase tracking-wider">设置</h1>
-              <p className="text-sm text-white/60">配置模型、语音与偏好</p>
+              <p className="text-sm text-white/60">配置应用偏好设置</p>
             </div>
           </div>
         </header>
 
-        <Card className="mb-8 border-2 border-white/20 rounded-none bg-transparent">
-          <CardHeader className="px-4 pb-0">
-            <CardTitle className="text-lg font-semibold uppercase tracking-wide text-white">模型选择</CardTitle>
-          </CardHeader>
-          <CardContent className="px-4">
-            <RadioGroup value={settings.model} onValueChange={(value) => setSettings({ ...settings, model: value })}>
-              {modelOptions.map((model) => (
-                <div key={model.id} className="flex items-start gap-3 p-3 border border-white/20 rounded-none hover:border-white/40 transition-colors">
-                  <RadioGroupItem value={model.id} className="mt-1 rounded-none border-2 border-white/40 data-[state=checked]:bg-white data-[state=checked]:border-white" />
-                  <div className="flex-1">
-                    <div className="font-medium text-white">{model.name}</div>
-                    <div className="text-sm text-white/60">{model.description}</div>
-                  </div>
-                </div>
-              ))}
-            </RadioGroup>
-          </CardContent>
-        </Card>
-
-        <Card className="mb-8 border-2 border-white/20 rounded-none bg-transparent">
-          <CardHeader className="px-4 pb-0">
-            <CardTitle className="text-lg font-semibold uppercase tracking-wide text-white">语音选择</CardTitle>
-          </CardHeader>
-          <CardContent className="px-4">
-            <RadioGroup value={settings.ttsVoice} onValueChange={(value) => setSettings({ ...settings, ttsVoice: value })} className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {voiceOptions.map((voice) => (
-                <div key={voice.id} className="flex items-start gap-3 p-3 border border-white/20 rounded-none hover:border-white/40 transition-colors">
-                  <RadioGroupItem value={voice.id} className="mt-1 rounded-none border-2 border-white/40 data-[state=checked]:bg-white data-[state=checked]:border-white" />
-                  <div className="flex-1">
-                    <div className="font-medium text-white">{voice.name}</div>
-                    <div className="text-sm text-white/60">{voice.description}</div>
-                  </div>
-                </div>
-              ))}
-            </RadioGroup>
-          </CardContent>
-        </Card>
 
         <section className="mb-8 p-4 border-2 border-white/20 rounded-none bg-transparent">
           <h2 className="text-lg font-semibold uppercase tracking-wide mb-4 text-white">默认技能</h2>
@@ -231,48 +168,6 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        <section className="mb-8 p-4 border-2 border-white/20 rounded-none bg-transparent">
-          <h2 className="text-lg font-semibold uppercase tracking-wide mb-4 text-white">性能偏好</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2 text-white">响应速度</label>
-              <RadioGroup value={settings.preferences.responseSpeed} onValueChange={(value) => setSettings({ 
-                ...settings, 
-                preferences: { ...settings.preferences, responseSpeed: value }
-              })} className="flex gap-3">
-                {[
-                  { id: "fast", name: "快速", description: "优先速度，可能影响质量" },
-                  { id: "balanced", name: "平衡", description: "速度与质量兼顾" },
-                  { id: "quality", name: "质量", description: "优先质量，可能较慢" },
-                ].map((option) => (
-                  <div key={option.id} className="flex items-center gap-2 p-2 border border-white/20 rounded-none hover:border-white/40 transition-colors">
-                    <RadioGroupItem value={option.id} className="rounded-none border-2 border-white/40 data-[state=checked]:bg-white data-[state=checked]:border-white" />
-                    <div>
-                      <div className="text-sm font-medium text-white">{option.name}</div>
-                      <div className="text-xs text-white/60">{option.description}</div>
-                    </div>
-                  </div>
-                ))}
-              </RadioGroup>
-            </div>
-            <label className="flex items-center gap-3">
-              <Checkbox
-                checked={settings.preferences.costOptimization}
-                onCheckedChange={(checked) => 
-                  setSettings({ 
-                    ...settings, 
-                    preferences: { ...settings.preferences, costOptimization: !!checked }
-                  })
-                }
-                className="rounded-none border-2 border-white/40 data-[state=checked]:bg-white data-[state=checked]:text-black"
-              />
-              <div>
-                <div className="font-medium">成本优化</div>
-                <div className="text-sm text-white/60">自动选择成本更低的模型和参数</div>
-              </div>
-            </label>
-          </div>
-        </section>
 
         <div className="flex gap-4 justify-end">
           <button
