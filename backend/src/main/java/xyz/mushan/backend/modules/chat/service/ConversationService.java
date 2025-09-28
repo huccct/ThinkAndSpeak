@@ -34,7 +34,7 @@ public class ConversationService {
      * @return 创建的会话实体
      */
     @Transactional
-    public ConversationEntity createConversation(Long characterId, String userId) {
+    public ConversationEntity createConversation(Long characterId, Long userId) {
         ConversationEntity conv = ConversationEntity.builder()
                 .id(snowflake.nextId())
                 .userId(userId)
@@ -95,7 +95,7 @@ public class ConversationService {
      * @param userId 用户ID
      * @return 历史会话数据传输对象列表
      */
-    public List<ConversationDto> getHistory(String userId) {
+    public List<ConversationDto> getHistory(Long userId) {
         List<ConversationEntity> conversations = conversationRepository.findByUserId(userId);
         return conversations.stream()
                 .map(c -> new ConversationDto(c.getId(), c.getCharacterId(), c.getTitle(), null))

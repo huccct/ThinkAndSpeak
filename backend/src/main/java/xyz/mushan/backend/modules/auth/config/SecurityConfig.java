@@ -28,6 +28,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import xyz.mushan.backend.common.util.security.JwtUtil;
+import xyz.mushan.backend.modules.auth.dto.LoginUser;
 import xyz.mushan.backend.modules.auth.repository.UserRepository;
 
 import javax.annotation.Nonnull;
@@ -45,6 +46,7 @@ import java.util.Map;
 public class SecurityConfig {
 
     private final JwtUtil jwtUtil;
+    private final UserDetailsService userDetailsService;
 
     /**
      * 密码加密器配置，使用BCrypt算法进行密码加密
@@ -161,10 +163,10 @@ public class SecurityConfig {
                     if (jwtUtil.verifyToken(token)) {
                         Map<String, Object> claims = jwtUtil.parseToken(token);
                         String username = (String) claims.get("username");
-
-                        // 创建认证对象并设置到安全上下文中
-                        Authentication authentication = new UsernamePasswordAuthenticationToken(username, null,
-                                Collections.singletonList(new SimpleGrantedAuthority("USER")));
+                        LoginUser loginUser = (LoginUser) userDetailsService.loadUserByUsername(username);
+                        Authentication authentication =
+                                new UsernamePasswordAuthenticationToken(
+                                        loginUser, null, loginUser.getAuthorities());
                         SecurityContextHolder.getContext().setAuthentication(authentication);
                     }
                 }

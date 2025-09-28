@@ -11,10 +11,5 @@ import lombok.Data;
 @Data
 public class CreateConversationRequest {
     // 角色ID, Long字符串
-    @NotBlank
-    @Pattern(regexp = "\\d{1,19}", message = "characterId 必须为1-19位数字")
-    private String characterId;
-
-    // 用户ID, Long字符串
-    private String userId;
+    private Long characterId;
 }

@@ -4,11 +4,14 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import xyz.mushan.backend.common.util.IdConverter;
 import xyz.mushan.backend.common.base.ApiResponse;
+import xyz.mushan.backend.modules.auth.dto.LoginUser;
+import xyz.mushan.backend.modules.auth.utils.SecurityUtil;
 import xyz.mushan.backend.modules.chat.dto.ConversationDto;
 import xyz.mushan.backend.modules.chat.dto.MessageDto;
 import xyz.mushan.backend.modules.chat.entity.ConversationEntity;
@@ -47,9 +50,12 @@ public class ConversationController {
     @PostMapping
     @Operation(summary = "创建会话", description = "创建一个新的会话")
     public ApiResponse<CreateConversationResponse> createConversation(
-            @Parameter(description = "请求体，包含characterId和userId") @Valid @RequestBody CreateConversationRequest body) {
-        ConversationEntity conv = conversationService.createConversation(IdConverter.parse(body.getCharacterId()),
-                body.getUserId());
+            @Parameter(description = "请求体，包含characterId和userId")
+            @Valid
+            @RequestBody
+            CreateConversationRequest body) {
+        LoginUser loginUser = SecurityUtil.getCurrentUser();
+        ConversationEntity conv = conversationService.createConversation(body.getCharacterId(), loginUser.getUserId());
         return ApiResponse.success(new CreateConversationResponse(conv.getId().toString()));
     }
 
@@ -69,14 +75,13 @@ public class ConversationController {
     /**
      * 用户历史会话
      *
-     * @param userId 用户ID
      * @return 会话数据传输对象数组
      */
-    @GetMapping("/history/{userId}")
-    @Operation(summary = "用户历史会话", description = "获取指定用户的历史会话")
-    public ApiResponse<List<ConversationDto>> getHistory(
-            @Parameter(description = "用户ID") @PathVariable("userId") String userId) {
-        return ApiResponse.success(conversationService.getHistory(userId));
+    @GetMapping("/history")
+    @Operation(summary = "用户历史会话", description = "获取当前用户的历史会话")
+    public ApiResponse<List<ConversationDto>> getHistory() {
+        LoginUser loginUser = SecurityUtil.getCurrentUser();
+        return ApiResponse.success(conversationService.getHistory(loginUser.getUserId()));
     }
 
     /**
